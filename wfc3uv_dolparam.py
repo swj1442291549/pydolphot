@@ -252,3 +252,4 @@ if __name__ == "__main__":
         image_params(files_dict, chip, param_file)
         # add gloal dolphot parameters
         dolparams(param_file)
+    gen_script()

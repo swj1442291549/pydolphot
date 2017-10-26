@@ -217,6 +217,11 @@ def dolparams(paramfile):
         file.write(i + ' = ' + np.str(dolphot_params[i]) + "\n")
     file.close()
 
+def gen_script():
+    with open('run.sh', 'w') as f:
+        f.write("dolphot output1 -pphot1.param >> phot1.log &\n")
+        f.write("dolphot output2 -pphot2.param >> phot2.log &\n")
+    subprocess.call('chmod a+x run.sh', shell=True)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -250,3 +255,4 @@ if __name__ == "__main__":
         image_params(files_dict, chip, param_file)
         # add gloal dolphot parameters
         dolparams(param_file)
+    gen_script()
