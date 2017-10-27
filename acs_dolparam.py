@@ -11,7 +11,7 @@ from astropy.io import fits
 
 # currently assumes *all* relevant fits files are in the same raw directory
 def load_files(ref_file,
-               rawdir='raw/',
+              rawdir='raw/',
                log_file='phot[0-9].log',
                param_file='phot[0-9].param'):
     """Copy necessary files out of rawdir

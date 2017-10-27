@@ -68,15 +68,18 @@ def proc_wfc3(files, log_file='phot.log', is_ref=False):
                           (False)
 
     Returns:
-        splitnames (dict): dictionary of chip1 and chip2
+        splitnames_uv (dict): dictionary of chip1 and chip2 for UVIS
+        splitnames_ir (dict): dictionary of chip1 and chip2 for IR
     """
     # rename files to include filter name
     newname_store = []
     f1_store = []
-    f2_store = []
+    det_store = []
     for i in range(len(files)):
         hdu = fits.open(files[i])
         f1 = hdu[0].header['filter']
+        det = hdu[0].header['DETECTOR']
+        det_store.append(det)
         name = files[i].split('_')
         filter = f1.swapcase()
         newname = name[0] + '_' + filter + '_' + name[1]
@@ -85,28 +88,50 @@ def proc_wfc3(files, log_file='phot.log', is_ref=False):
         hdu.writeto(newname, clobber=True)
 
     # run wfc3mask on all WFC3 files
-    splitnames = {'chip1': [], 'chip2': []}
+    splitnames_uv = {'chip1': [], 'chip2': []}
+    splitnames_ir = {'chip1': [], 'chip2': []}
     for j in newname_store:
         subprocess.call("wfc3mask " + j + " > " + log_file, shell=True)
         subprocess.call("splitgroups " + j + " > " + log_file, shell=True)
         if is_ref == True:
-            subprocess.call(
-                "calcsky " + j.replace('.fits', '.chip1') +
-                "  15 35 4 2.25 2.00 >> " + log_file,
-                shell=True)
-            splitnames['chip1'].append(j.replace('.fits', '.chip1.fits'))
+            if det_store[i] == 'IR':
+                subprocess.call(
+                    "calcsky " + j.replace('.fits', '.chip1') +
+                    "  10 24 2 2.25 2.00 >> " + log_file,
+                    shell=True)
+                splitnames_ir['chip1'].append(j.replace('.fits', '.chip1.fits'))
+                return splitnames_ir
+            else:
+                subprocess.call(
+                    "calcsky " + j.replace('.fits', '.chip1') +
+                    "  15 35 4 2.25 2.00 >> " + log_file,
+                    shell=True)
+                splitnames_uv['chip1'].append(j.replace('.fits', '.chip1.fits'))
+                return splitnames_uv
         elif is_ref == False:
-            subprocess.call(
-                "calcsky " + j.replace('.fits', '.chip1') +
-                "  15 35 4 2.25 2.00 >> " + log_file,
-                shell=True)
-            splitnames['chip1'].append(j.replace('.fits', '.chip1.fits'))
-            subprocess.call(
-                "calcsky " + j.replace('.fits', '.chip2') +
-                "  15 35 4 2.25 2.00 >> " + log_file,
-                shell=True)
-            splitnames['chip2'].append(j.replace('.fits', '.chip2.fits'))
-    return splitnames
+            if det_store[i] == 'IR':
+                subprocess.call(
+                    "calcsky " + j.replace('.fits', '.chip1') +
+                    "  10 24 2 2.25 2.00 >> " + log_file,
+                    shell=True)
+                splitnames_ir['chip1'].append(j.replace('.fits', '.chip1.fits'))
+                subprocess.call(
+                    "calcsky " + j.replace('.fits', '.chip2') +
+                    "  10 24 2 2.25 2.00 >> " + log_file,
+                    shell=True)
+                splitnames_ir['chip2'].append(j.replace('.fits', '.chip2.fits'))
+            else:
+                subprocess.call(
+                    "calcsky " + j.replace('.fits', '.chip1') +
+                    "  15 35 4 2.25 2.00 >> " + log_file,
+                    shell=True)
+                splitnames_uv['chip1'].append(j.replace('.fits', '.chip1.fits'))
+                subprocess.call(
+                    "calcsky " + j.replace('.fits', '.chip2') +
+                    "  15 35 4 2.25 2.00 >> " + log_file,
+                    shell=True)
+                splitnames_uv['chip2'].append(j.replace('.fits', '.chip2.fits'))
+    return splitnames_uv, splitnames_ir
 
 
 def ref_params(ref_dict, paramfile):
@@ -129,15 +154,25 @@ def image_params(images, chip, paramfile):
     """Generate parameters for iamges
 
     Args:
-        images (dict): dict of reference file
+        images (dict): dict of image file
         chip (string): chip
         paramfile (string): parameter file
 
     """
-    params = {
+    uv_params = {
         'raper': '4',
         'rchi': '2.0',
         'rsky': '15 35',
+        'rpsf': '10',
+        'apsky': '15 25',
+        'shift': '0 0',
+        'xform': '1 0 0'
+    }
+
+    ir_params = {
+        'raper': '3',
+        'rchi': '1.5',
+        'rsky': '8 20',
         'rpsf': '10',
         'apsky': '15 25',
         'shift': '0 0',
@@ -232,8 +267,9 @@ if __name__ == "__main__":
     # load in HST images
     file_list, ref_list = load_files(ref)
 
-    files_dict = proc_wfc3(file_list)
-    number_images = len(files_dict['chip1'])
+    files_uv_dict, files_ir_dict = proc_wfc3(file_list)
+
+    number_images = len(files_uv_dict['chip1']) + len(files_ir_dict['chip1'])
     ref_dict = proc_wfc3(ref_list, is_ref=True)
 
     # write number of images
