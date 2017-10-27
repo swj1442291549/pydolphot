@@ -302,6 +302,13 @@ def param_files(df):
             f.write(i + ' = ' + np.str(dolphot_params[i]) + "\n")
 
 
+def gen_script():
+    with open('run.sh', 'w') as f:
+        f.write("dolphot output1 -pphot1.param >> phot1.log &\n")
+        f.write("dolphot output2 -pphot2.param >> phot2.log &\n")
+    subprocess.call('chmod a+x run.sh', shell=True)
+
+
 if __name__ == "__main__":
     ref_file = extract_ref()
     df = gen_frame(ref_file)
@@ -309,3 +316,5 @@ if __name__ == "__main__":
     mask_files(df)
     split_files(df)
     calsky_files(df)
+    param_files(df)
+    gen_script()
