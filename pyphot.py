@@ -6,6 +6,7 @@ from astropy.io import fits
 from astropy import wcs
 import argparse
 import subprocess
+import os
 
 
 if __name__ == "__main__":
@@ -72,19 +73,21 @@ if __name__ == "__main__":
     t.write(outname + '.summary.fits', overwrite=True)
 
     snr = 5.
-    sharp = 0.1
+    sharp = 0.04
     crowd = 1.
     objtype = 1
+    flag = 1
 
     wgood = np.where((t[filters[0] + '_SNR'] >= snr) & (
-        t[filters[1] + '_SNR'] >= snr) & (t[filters[0] + '_SHARP']**2 < sharp) +
+        t[filters[1] + '_SNR'] >= snr) & (t[filters[0] + '_SHARP']**2 < sharp) &
                      (t[filters[1] + '_SHARP']**2 < sharp) &
-                     ((t[filters[0] + '_CROWD'] + t[filters[1] + '_CROWD']) <
-                      crowd) & (t['OBJECT_TYPE'] <= objtype))
+                     (t[filters[0] + '_CROWD'] < crowd) & (t[filters[1] + '_CROWD'] < crowd) & (t['OBJECT_TYPE'] == objtype) &(t[filters[0] + '_FLAG'] <= flag) & (t[filters[1] + '_FLAG'] <= flag))
 
     t1 = t[wgood]
     t1.write(outname + '.gst.fits', overwrite=True)
     
+    if os.path.isdir("final"):
+        subprocess('rm -rf final', shell=True)
     subprocess.call('mkdir final', shell=True)
     subprocess.call('mv {0}.summary.fits final'.format(outname), shell=True)
     subprocess.call('mv {0}.gst.fits final'.format(outname), shell=True)
