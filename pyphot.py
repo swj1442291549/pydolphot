@@ -7,6 +7,7 @@ from astropy import wcs
 import argparse
 import subprocess
 import os
+import glob
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
