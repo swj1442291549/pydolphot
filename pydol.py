@@ -240,10 +240,10 @@ def param_files(df):
     paramfile = 'phot1.param'
     with open(paramfile, 'w') as f:
         f.write("Nimg={0:d}\n".format(len_image))
-        f.write("img0_file = {0}\n".format(df_ref.iloc[0]['img_name'].replace(
+        f.write("img0_file={0}\n".format(df_ref.iloc[0]['img_name'].replace(
             '.fits', '.chip1')))
-        f.write("img0_shift = 0 0\n")
-        f.write("img0_xform = 1 0 0\n")
+        f.write("img0_shift=0 0\n")
+        f.write("img0_xform=1 0 0\n")
         for i in range(len(df_img)):
             f.write("img{0:d}_file = {1}\n".format(i + 1, df_img.iloc[i][
                 'img_name'].replace('.fits', '.chip1')))
@@ -256,13 +256,13 @@ def param_files(df):
                     params = ir_params
             else:
                 params = acs_params
-            f.write("img{0}_shift = {1}\n".format(i + 1, params['shift']))
-            f.write("img{0}_xform = {1}\n".format(i + 1, params['xform']))
-            f.write("img{0}_raper = {1}\n".format(i + 1, params['raper']))
-            f.write("img{0}_rsky = {1}\n".format(i + 1, params['rsky']))
-            f.write("img{0}_rchi = {1}\n".format(i + 1, params['rchi']))
-            f.write("img{0}_rpsf = {1}\n".format(i + 1, params['rpsf']))
-            f.write("img{0}_apsky = {1}\n".format(i + 1, params['apsky']))
+            f.write("img{0}_shift={1}\n".format(i + 1, params['shift']))
+            f.write("img{0}_xform={1}\n".format(i + 1, params['xform']))
+            f.write("img{0}_raper={1}\n".format(i + 1, params['raper']))
+            f.write("img{0}_rsky={1}\n".format(i + 1, params['rsky']))
+            f.write("img{0}_rchi={1}\n".format(i + 1, params['rchi']))
+            f.write("img{0}_rpsf={1}\n".format(i + 1, params['rpsf']))
+            f.write("img{0}_apsky={1}\n".format(i + 1, params['apsky']))
         f.write('\n')
         if df_img.iloc[0]['inst'] == 'WFC3' and df_img.iloc[0]['detect'] != 'UVIS':
             dolphot_params['SkipSky'] = 1
@@ -272,10 +272,10 @@ def param_files(df):
     paramfile = 'phot2.param'
     with open(paramfile, 'w') as f:
         f.write("Nimg={0:d}\n".format(len_image))
-        f.write("img0_file = {0}\n".format(df_ref.iloc[0]['img_name'].replace(
+        f.write("img0_file={0}\n".format(df_ref.iloc[0]['img_name'].replace(
             '.fits', '.chip1')))
-        f.write("img0_shift = 0 0\n")
-        f.write("img0_xform = 1 0 0\n")
+        f.write("img0_shift=0 0\n")
+        f.write("img0_xform=1 0 0\n")
         for i in range(len(df_img)):
             f.write("img{0:d}_file = {1}\n".format(i + 1, df_img.iloc[i][
                 'img_name'].replace('.fits', '.chip2')))
@@ -288,25 +288,27 @@ def param_files(df):
                     params = ir_params
             else:
                 params = acs_params
-            f.write("img{0}_shift = {1}\n".format(i + 1, params['shift']))
-            f.write("img{0}_xform = {1}\n".format(i + 1, params['xform']))
-            f.write("img{0}_raper = {1}\n".format(i + 1, params['raper']))
-            f.write("img{0}_rsky = {1}\n".format(i + 1, params['rsky']))
-            f.write("img{0}_rchi = {1}\n".format(i + 1, params['rchi']))
-            f.write("img{0}_rpsf = {1}\n".format(i + 1, params['rpsf']))
-            f.write("img{0}_apsky = {1}\n".format(i + 1, params['apsky']))
+            f.write("img{0}_shift={1}\n".format(i + 1, params['shift']))
+            f.write("img{0}_xform={1}\n".format(i + 1, params['xform']))
+            f.write("img{0}_raper={1}\n".format(i + 1, params['raper']))
+            f.write("img{0}_rsky={1}\n".format(i + 1, params['rsky']))
+            f.write("img{0}_rchi={1}\n".format(i + 1, params['rchi']))
+            f.write("img{0}_rpsf={1}\n".format(i + 1, params['rpsf']))
+            f.write("img{0}_apsky={1}\n".format(i + 1, params['apsky']))
         f.write('\n')
         if df_img.iloc[0]['inst'] == 'WFC3' and df_img.iloc[0]['detect'] != 'UVIS':
             dolphot_params['SkipSky'] = 1
         for i in dolphot_params.keys():
-            f.write(i + ' = ' + np.str(dolphot_params[i]) + "\n")
+            f.write(i + '=' + np.str(dolphot_params[i]) + "\n")
 
 
-def gen_script():
+def run_script():
     with open('run.sh', 'w') as f:
         f.write("dolphot output1 -pphot1.param >> phot1.log &\n")
         f.write("dolphot output2 -pphot2.param >> phot2.log &\n")
     subprocess.call('chmod a+x run.sh', shell=True)
+    subprocess.call('./run.sh', shell=True)
+    
 
 
 if __name__ == "__main__":
@@ -317,4 +319,4 @@ if __name__ == "__main__":
     split_files(df)
     calsky_files(df)
     param_files(df)
-    gen_script()
+    run_script()
