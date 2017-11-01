@@ -8,7 +8,6 @@ import argparse
 import subprocess
 import os
 
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("ref_name", help='File name of reference file (drz)')
@@ -18,13 +17,15 @@ if __name__ == "__main__":
     refname = args.ref_name
     filter = args.filter
 
-    outname='o'
+    outname = 'o'
     data_1_name = 'output1'
     data_2_name = 'output2'
 
     global_labels = ['Number', 'RA', 'DEC', 'X', 'Y', 'OBJECT_TYPE']
-    filter_labels = ['_VEGA', '_ERR', '_SNR', '_SHARP', '_ROUND', '_CROWD', '_FLAG']
-    formats = ['f8', 'f8', 'f8', 'f8', 'f8', 'f8', 'f8'] 
+    filter_labels = [
+        '_VEGA', '_ERR', '_SNR', '_SHARP', '_ROUND', '_CROWD', '_FLAG'
+    ]
+    formats = ['f8', 'f8', 'f8', 'f8', 'f8', 'f8', 'f8']
 
     filters = filter.split()
     nfilters = len(filters)
@@ -51,10 +52,8 @@ if __name__ == "__main__":
     t = astropy.table.Table()
     t.add_column(astropy.table.Column(name=global_labels[0],
                                       data=num))  # star number
-    t.add_column(astropy.table.Column(name=global_labels[1],
-                                      data=ra))  # RA
-    t.add_column(astropy.table.Column(name=global_labels[2],
-                                      data=dec))  # DEC
+    t.add_column(astropy.table.Column(name=global_labels[1], data=ra))  # RA
+    t.add_column(astropy.table.Column(name=global_labels[2], data=dec))  # DEC
     t.add_column(astropy.table.Column(name=global_labels[3],
                                       data=data[:, 2]))  # X
     t.add_column(astropy.table.Column(name=global_labels[4],
@@ -78,17 +77,19 @@ if __name__ == "__main__":
     objtype = 1
     flag = 1
 
-    wgood = np.where((t[filters[0] + '_SNR'] >= snr) & (
-        t[filters[1] + '_SNR'] >= snr) & (t[filters[0] + '_SHARP']**2 < sharp) &
-                     (t[filters[1] + '_SHARP']**2 < sharp) &
-                     (t[filters[0] + '_CROWD'] < crowd) & (t[filters[1] + '_CROWD'] < crowd) & (t['OBJECT_TYPE'] == objtype) &(t[filters[0] + '_FLAG'] <= flag) & (t[filters[1] + '_FLAG'] <= flag))
+    wgood = np.where(
+        (t[filters[0] + '_SNR'] >= snr) & (t[filters[1] + '_SNR'] >= snr) &
+        (t[filters[0] + '_SHARP']**2 <
+         sharp) & (t[filters[1] + '_SHARP']**2 <
+                   sharp) & (t[filters[0] + '_CROWD'] < crowd) &
+        (t[filters[1] + '_CROWD'] < crowd) & (t['OBJECT_TYPE'] == objtype) &
+        (t[filters[0] + '_FLAG'] <= flag) & (t[filters[1] + '_FLAG'] <= flag))
 
     t1 = t[wgood]
     t1.write(outname + '.gst.fits', overwrite=True)
-    
+
     if os.path.isdir("final"):
         subprocess.call('rm -rf final', shell=True)
     subprocess.call('mkdir final', shell=True)
     subprocess.call('mv {0}.summary.fits final'.format(outname), shell=True)
     subprocess.call('mv {0}.gst.fits final'.format(outname), shell=True)
-
