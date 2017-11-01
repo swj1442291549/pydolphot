@@ -10,12 +10,12 @@ import os
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("ref_name", help='File name of reference file (drz)')
     parser.add_argument("filter", help='Filter name (max 2)')
 
     args = parser.parse_args()
-    refname = args.ref_name
     filter = args.filter
+
+    refname = glob.glob('*drz.fits')[0]
 
     outname = 'o'
     data_1_name = 'output1'
