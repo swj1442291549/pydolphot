@@ -74,7 +74,7 @@ if __name__ == "__main__":
 
     snr = 5.
     sharp = 0.04
-    crowd = 1.
+    crowd = 0.5
     objtype = 1
     flag = 1
 
