@@ -226,11 +226,7 @@ def param_files(df):
         'psfoff': 0.0,
         'SearchMode': 1,
         'SubResRef': 1,
-        'DiagPlotType': 'PS',
-        '#FakeStars': 'fake.list',
-        '#FakeMatch': 3.0,
-        '#FakeStarPSF': 1.5,
-        '#RandomFake': 1
+        'DiagPlotType': 'PS'
     }
 
     df_img = df[df['type'] == 'image']
