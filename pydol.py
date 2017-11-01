@@ -247,7 +247,6 @@ def param_files(df):
         for i in range(len(df_img)):
             f.write("img{0:d}_file = {1}\n".format(i + 1, df_img.iloc[i][
                 'img_name'].replace('.fits', '.chip1')))
-        f.write('\n')
         for i in range(len(df_img)):
             if df_img.iloc[i]['inst'] == 'WFC3':
                 if df_img.iloc[i]['detect'] == 'UVIS':
@@ -263,7 +262,6 @@ def param_files(df):
             f.write("img{0}_rchi={1}\n".format(i + 1, params['rchi']))
             f.write("img{0}_rpsf={1}\n".format(i + 1, params['rpsf']))
             f.write("img{0}_apsky={1}\n".format(i + 1, params['apsky']))
-        f.write('\n')
         if df_img.iloc[0]['inst'] == 'WFC3' and df_img.iloc[0]['detect'] != 'UVIS':
             dolphot_params['SkipSky'] = 1
         for i in dolphot_params.keys():
@@ -277,9 +275,8 @@ def param_files(df):
         f.write("img0_shift=0 0\n")
         f.write("img0_xform=1 0 0\n")
         for i in range(len(df_img)):
-            f.write("img{0:d}_file = {1}\n".format(i + 1, df_img.iloc[i][
+            f.write("img{0:d}_file={1}\n".format(i + 1, df_img.iloc[i][
                 'img_name'].replace('.fits', '.chip2')))
-        f.write('\n')
         for i in range(len(df_img)):
             if df_img.iloc[i]['inst'] == 'WFC3':
                 if df_img.iloc[i]['detect'] == 'UVIS':
@@ -295,7 +292,6 @@ def param_files(df):
             f.write("img{0}_rchi={1}\n".format(i + 1, params['rchi']))
             f.write("img{0}_rpsf={1}\n".format(i + 1, params['rpsf']))
             f.write("img{0}_apsky={1}\n".format(i + 1, params['apsky']))
-        f.write('\n')
         if df_img.iloc[0]['inst'] == 'WFC3' and df_img.iloc[0]['detect'] != 'UVIS':
             dolphot_params['SkipSky'] = 1
         for i in dolphot_params.keys():
