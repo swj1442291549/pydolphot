@@ -87,7 +87,7 @@ if __name__ == "__main__":
     t1.write(outname + '.gst.fits', overwrite=True)
     
     if os.path.isdir("final"):
-        subprocess('rm -rf final', shell=True)
+        subprocess.call('rm -rf final', shell=True)
     subprocess.call('mkdir final', shell=True)
     subprocess.call('mv {0}.summary.fits final'.format(outname), shell=True)
     subprocess.call('mv {0}.gst.fits final'.format(outname), shell=True)
