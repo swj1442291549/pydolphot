@@ -12,15 +12,22 @@ import glob
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("filter", help='Filter name (max 2)')
+    parser.add_argument("-f", '--fake', action='store_true', help='Fake star?')
 
     args = parser.parse_args()
     filter = args.filter
+    is_fake = args.fake
 
     refname = glob.glob('*drz.fits')[0]
-
-    outname = 'o'
-    data_1_name = 'output1'
-    data_2_name = 'output2'
+    
+    if is_fake:
+        outname = 'o.fake'
+        data_1_name = 'output1.fake'
+        data_2_name = 'output2.fake'
+    else:
+        outname = 'o'
+        data_1_name = 'output1'
+        data_2_name = 'output2'
 
     global_labels = ['Number', 'RA', 'DEC', 'X', 'Y', 'OBJECT_TYPE']
     filter_labels = [
@@ -39,6 +46,7 @@ if __name__ == "__main__":
     num_1 = np.arange(len(data_1[:, 0])) + 1
     world_1 = w.wcs_pix2world(data_1[:, 2], data_1[:, 3], 1)
 
+
     print('Loading raw DOLPHOT file for chip2...')
     data_2 = np.loadtxt(data_2_name)
     print('Loaded {0} objects'.format(len(data_2)))
@@ -49,10 +57,13 @@ if __name__ == "__main__":
     ra = np.append(world_1[0], world_2[0])
     dec = np.append(world_1[1], world_2[1])
     data = np.concatenate((data_1, data_2), axis=0)
+    chip = np.append(np.array([1] * len(num_1)), np.array([2] * len(num_2)))
 
     t = astropy.table.Table()
     t.add_column(astropy.table.Column(name=global_labels[0],
                                       data=num))  # star number
+    t.add_column(astropy.table.Column(name='chip',
+                                      data=chip))  # chip number
     t.add_column(astropy.table.Column(name=global_labels[1], data=ra))  # RA
     t.add_column(astropy.table.Column(name=global_labels[2], data=dec))  # DEC
     t.add_column(astropy.table.Column(name=global_labels[3],
