@@ -12,22 +12,15 @@ import glob
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("filter", help='Filter name (max 2)')
-    parser.add_argument("-f", '--fake', action='store_true', help='Fake star?')
 
     args = parser.parse_args()
     filter = args.filter
-    is_fake = args.fake
 
     refname = glob.glob('*drz.fits')[0]
     
-    if is_fake:
-        outname = 'o.fake'
-        data_1_name = 'output1.fake'
-        data_2_name = 'output2.fake'
-    else:
-        outname = 'o'
-        data_1_name = 'output1'
-        data_2_name = 'output2'
+    outname = 'o'
+    data_1_name = 'output1'
+    data_2_name = 'output2'
 
     global_labels = ['Number', 'RA', 'DEC', 'X', 'Y', 'OBJECT_TYPE']
     filter_labels = [
@@ -100,8 +93,7 @@ if __name__ == "__main__":
     t1 = t[wgood]
     t1.write(outname + '.gst.fits', overwrite=True)
 
-    if os.path.isdir("final"):
-        subprocess.call('rm -rf final', shell=True)
-    subprocess.call('mkdir final', shell=True)
+    if not os.path.isdir("final"):
+        subprocess.call('mkdir final', shell=True)
     subprocess.call('mv {0}.summary.fits final'.format(outname), shell=True)
     subprocess.call('mv {0}.gst.fits final'.format(outname), shell=True)
