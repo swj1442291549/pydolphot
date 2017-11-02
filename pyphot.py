@@ -18,7 +18,6 @@ if __name__ == "__main__":
 
     refname = glob.glob('*drz.fits')[0]
     
-    outname = 'o'
     data_1_name = 'output1'
     data_2_name = 'output2'
 
@@ -74,7 +73,7 @@ if __name__ == "__main__":
                 astropy.table.Column(
                     name=filters[i] + k, data=data[:, cols[j] + (i * 13)]))
 
-    t.write(outname + '.summary.fits', overwrite=True)
+    t.write('o.summary.fits', overwrite=True)
 
     snr = 5.
     sharp = 0.04
@@ -91,9 +90,9 @@ if __name__ == "__main__":
         (t[filters[0] + '_FLAG'] <= flag) & (t[filters[1] + '_FLAG'] <= flag))
 
     t1 = t[wgood]
-    t1.write(outname + '.gst.fits', overwrite=True)
+    t1.write('o.gst.fits', overwrite=True)
 
     if not os.path.isdir("final"):
         subprocess.call('mkdir final', shell=True)
-    subprocess.call('mv {0}.summary.fits final'.format(outname), shell=True)
-    subprocess.call('mv {0}.gst.fits final'.format(outname), shell=True)
+    subprocess.call('mv o.summary.fits final', shell=True)
+    subprocess.call('mv o.gst.fits final', shell=True)

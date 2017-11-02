@@ -22,7 +22,6 @@ if __name__ == "__main__":
     hdu_list = fits.open(refname)
     w = wcs.WCS(hdu_list[1].header)
 
-    outname = 'o'
     data_1_name = 'output1.fake'
     data_2_name = 'output2.fake'
 
@@ -64,4 +63,6 @@ if __name__ == "__main__":
     t.add_column(astropy.table.Column(name='{0}_VEGA'.format(filter2),
                                       data=data[:, 7])) 
 
-    t.write(outname + '.fake.fits', overwrite=True)
+    t.write('o.fake.fits', overwrite=True)
+
+    subprocess.call('mv o.fake.fits final')
