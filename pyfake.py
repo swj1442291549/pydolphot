@@ -1,20 +1,29 @@
 import subprocess
+import pandas as pd
+import numpy as np
+from astropy.io import fits
 import argparse
 
 
-
-
-def generate_fakelist(chip_num, filter1, filter2, f1_min, f2_max, c_min, c_max, n_star):
-    subprocess.call('fakelist output{0} {1} {2} {3} {4} {5} {6} -nstar={7} > fakelist{0}'.format(chip_num, filter1, filter2, f1_min, f1_max, c_min, c_max, n_star), shell=True)
+def generate_fakelist(chip_num, filter1, filter2):
+    hdu_list = fits.open('final/o.gst.fits')
+    data = hdu_list[1].data
+    df = pd.DataFrame(np.array(data).byteswap().newbyteorder())
+    df_chip = df[df['chip'] == chip_num]
+    with open('fake{0}.list'.format(chip_num), 'w') as f:
+        for i in range(len(df_chip)):
+            item = df_chip.iloc[i]
+            f.write('0 1 {0} {1} {2} {3}\n'.format(item['X'], item['Y'], item['{0}_VEGA'.format(filter1)], item['{0}_VEGA'.format(filter2)]))
     
 
 
 def generate_fake_param(chip_num):
-    subprocess.call('cp phot{0}.param phot{0}.fake.param'.format(chip_num), shell=True)
+    subprocess.call(
+        'cp phot{0}.param phot{0}.fake.param'.format(chip_num), shell=True)
     with open('phot{0}.fake.param'.format(chip_num), 'a') as f:
         f.write("RandomFake=1\n")
         f.write("FakeMatch=3.0\n")
-        f.write('FakeStars=fakelist{0}'.format(chip_num))
+        f.write('FakeStars=fake{0}.list'.format(chip_num))
 
 
 def run_script():
@@ -29,22 +38,13 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("Bfilter", help='Blue Filter name')
     parser.add_argument("Rfilter", help='Red Filter name')
-    parser.add_argument("Magmin", help='Minimum mag')
-    parser.add_argument("Magmax", help='Maximum mag')
-    parser.add_argument("Colormin", help='Minimum color')
-    parser.add_argument("Colormax", help='Maximum color')
-    parser.add_argument("nstar", help='Nstar')
     args = parser.parse_args()
     filter1 = args.Bfilter
     filter2 = args.Rfilter
-    f1_min = args.Magmin
-    f1_max = args.Magmax
-    c_min = args.Colormin
-    c_max = args.Colormax
-    n_star = args.nstar
 
-    generate_fakelist(1, filter1, filter2, f1_min, f1_max, c_min, c_max, n_star)
-    generate_fakelist(2, filter1, filter2, f1_min, f1_max, c_min, c_max, n_star)
+
+    generate_fakelist(1, filter1, filter2)
+    generate_fakelist(2, filter1, filter2)
 
     generate_fake_param(1)
     generate_fake_param(2)
