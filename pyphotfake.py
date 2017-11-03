@@ -56,13 +56,17 @@ if __name__ == "__main__":
                                       data=data[:, 3]))  # Y
     t.add_column(astropy.table.Column(name='{0}_NUM'.format(filter1),
                                       data=data[:, 4])) 
-    t.add_column(astropy.table.Column(name='{0}_VEGA'.format(filter1),
+    t.add_column(astropy.table.Column(name='{0}_VEGA_IN'.format(filter1),
                                       data=data[:, 5])) 
+    t.add_column(astropy.table.Column(name='{0}_VEGA'.format(filter1),
+                                      data=data[:, 31])) 
     t.add_column(astropy.table.Column(name='{0}_NUM'.format(filter2),
                                       data=data[:, 6])) 
-    t.add_column(astropy.table.Column(name='{0}_VEGA'.format(filter2),
+    t.add_column(astropy.table.Column(name='{0}_VEGA_IN'.format(filter2),
                                       data=data[:, 7])) 
+    t.add_column(astropy.table.Column(name='{0}_VEGA'.format(filter2),
+                                      data=data[:, 44])) 
 
     t.write('o.fake.fits', overwrite=True)
 
-    subprocess.call('mv o.fake.fits final')
+    subprocess.call('mv o.fake.fits final', shell=True)
