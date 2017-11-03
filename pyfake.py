@@ -5,16 +5,22 @@ from astropy.io import fits
 import argparse
 
 
-def generate_fakelist(chip_num, filter1, filter2):
+def generate_fakelist(chip_num, filter1, filter2, num):
     hdu_list = fits.open('final/o.gst.fits')
     data = hdu_list[1].data
     df = pd.DataFrame(np.array(data).byteswap().newbyteorder())
     df_chip = df[df['chip'] == chip_num]
+    X_min = min(df_chip['X'])
+    Y_min = min(df_chip['Y'])
+    X_max = max(df_chip['X'])
+    Y_max = max(df_chip['Y'])
+    X_fake = np.random.uniform(X_min, X_max, num)
+    Y_fake = np.random.uniform(Y_min, Y_max, num)
+    Bmag = 21
+    Imag = 20.7
     with open('fake{0}.list'.format(chip_num), 'w') as f:
-        for i in range(len(df_chip)):
-            item = df_chip.iloc[i]
-            f.write('0 1 {0} {1} {2} {3}\n'.format(item['X'], item['Y'], item['{0}_VEGA'.format(filter1)], item['{0}_VEGA'.format(filter2)]))
-    
+        for i in range(num):
+            f.write('0 1 {0} {1} {2} {3}\n'.format(X_fake[i], Y_fake[i], Bmag, Imag))
 
 
 def generate_fake_param(chip_num):
@@ -38,13 +44,15 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("Bfilter", help='Blue Filter name')
     parser.add_argument("Rfilter", help='Red Filter name')
+    parser.add_argument('-n', type=int, default=1000, help='Number of fake stars')
     args = parser.parse_args()
     filter1 = args.Bfilter
     filter2 = args.Rfilter
+    num = args.n
 
 
-    generate_fakelist(1, filter1, filter2)
-    generate_fakelist(2, filter1, filter2)
+    generate_fakelist(1, filter1, filter2, num)
+    generate_fakelist(2, filter1, filter2, num)
 
     generate_fake_param(1)
     generate_fake_param(2)
