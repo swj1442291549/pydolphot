@@ -58,15 +58,37 @@ if __name__ == "__main__":
                                       data=data[:, 4])) 
     t.add_column(astropy.table.Column(name='{0}_VEGA_IN'.format(filter1),
                                       data=data[:, 5])) 
-    t.add_column(astropy.table.Column(name='{0}_VEGA'.format(filter1),
-                                      data=data[:, 31])) 
     t.add_column(astropy.table.Column(name='{0}_NUM'.format(filter2),
                                       data=data[:, 6])) 
     t.add_column(astropy.table.Column(name='{0}_VEGA_IN'.format(filter2),
                                       data=data[:, 7])) 
-    t.add_column(astropy.table.Column(name='{0}_VEGA'.format(filter2),
-                                      data=data[:, 44])) 
 
-    t.write('o.fake.fits', overwrite=True)
+    filter_labels = ['_VEGA', '_ERR', '_SNR', '_SHARP', '_ROUND', '_CROWD', '_FLAG']
+    cols = np.int_(np.asarray((31, 33, 35, 36, 37, 38, 39)))
+    for j, k in enumerate(filter_labels):
+        t.add_column(astropy.table.Column(name=filter1 + k, data=data[:, cols[j]]))
+        t.add_column(astropy.table.Column(name=filter2 + k, data=data[:, cols[j] + 13]))
 
-    subprocess.call('mv o.fake.fits final', shell=True)
+    t.write('o.fake.summary.fits', overwrite=True)
+
+    snr = 5.
+    sharp = 0.04
+    crowd = 0.5
+    objtype = 1
+    flag = 1
+
+    wgood = np.where(
+        (t[filter1 + '_SNR'] >= snr) & (t[filter2 + '_SNR'] >= snr) &
+        (t[filters1 + '_SHARP']**2 <
+         sharp) & (t[filters2 + '_SHARP']**2 <
+                   sharp) & (t[filters1 + '_CROWD'] < crowd) &
+        (t[filters2 + '_CROWD'] < crowd) &
+        (t[filters1 + '_FLAG'] <= flag) & (t[filters2 + '_FLAG'] <= flag))
+
+    t1 = t[wgood]
+    t1.write('o.fake.gst.fits', overwrite=True)
+
+    if not os.path.isdir("final"):
+        subprocess.call('mkdir final', shell=True)
+    subprocess.call('mv o.fake.summary.fits final', shell=True)
+    subprocess.call('mv o.fake.gst.fits final', shell=True)
