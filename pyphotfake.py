@@ -79,11 +79,11 @@ if __name__ == "__main__":
 
     wgood = np.where(
         (t[filter1 + '_SNR'] >= snr) & (t[filter2 + '_SNR'] >= snr) &
-        (t[filters1 + '_SHARP']**2 <
-         sharp) & (t[filters2 + '_SHARP']**2 <
-                   sharp) & (t[filters1 + '_CROWD'] < crowd) &
-        (t[filters2 + '_CROWD'] < crowd) &
-        (t[filters1 + '_FLAG'] <= flag) & (t[filters2 + '_FLAG'] <= flag))
+        (t[filter1 + '_SHARP']**2 <
+         sharp) & (t[filter2 + '_SHARP']**2 <
+                   sharp) & (t[filter1 + '_CROWD'] < crowd) &
+        (t[filter2 + '_CROWD'] < crowd) &
+        (t[filter1 + '_FLAG'] <= flag) & (t[filter2 + '_FLAG'] <= flag))
 
     t1 = t[wgood]
     t1.write('o.fake.gst.fits', overwrite=True)
