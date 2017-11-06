@@ -1,4 +1,5 @@
 import subprocess
+import os
 import pandas as pd
 import numpy as np
 from astropy.io import fits
@@ -53,7 +54,7 @@ def pick_iso():
     return iso_files[index]
 
 
-def generate_fakelist(iso_file, chip_num, filter1, filter2, num_input, dm):
+def generate_fake_data(iso_file, chip_num, filter1, filter2, num_input, dm):
     hdu_list = fits.open('final/o.gst.fits')
     data = hdu_list[1].data
     df_o = pd.DataFrame(np.array(data).byteswap().newbyteorder())
@@ -85,9 +86,14 @@ def generate_fakelist(iso_file, chip_num, filter1, filter2, num_input, dm):
     Y_max = max(df_chip['Y'])
     X_fake = np.random.uniform(X_min, X_max, num)
     Y_fake = np.random.uniform(Y_min, Y_max, num)
-    with open('fake{0}.list'.format(chip_num), 'w') as f:
-        for i in range(num):
-            f.write('0 1 {0} {1} {2} {3}\n'.format(X_fake[i], Y_fake[i], filter1_fake[i] + dm, filter2_fake[i] + dm))
+
+    return pd.DataFrame({'X': X_fake, 'Y': Y_fake, 'f1': filter1_fake + dm, 'f2': filter2_fake + dm})
+    
+
+def generate_fakelist(df, chip_num, fake_num):
+    with open('fake/fake{0}.list{1:0>4}'.format(chip_num, fake_num), 'w') as f:
+        for i in range(len(df)):
+            f.write('0 1 {0} {1} {2} {3}\n'.format(df.iloc[i]['X'], df.iloc[i]['Y'], df.iloc[i]['f1'], df.iloc[i]['f2']))
 
 
 def generate_fake_param(chip_num):
@@ -96,13 +102,9 @@ def generate_fake_param(chip_num):
     with open('phot{0}.fake.param'.format(chip_num), 'a') as f:
         f.write("RandomFake=1\n")
         f.write("FakeMatch=3.0\n")
-        f.write('FakeStars=fake{0}.list'.format(chip_num))
 
 
 def run_script():
-    with open('run_fake.sh', 'w') as f:
-        f.write("dolphot output1 -pphot1.fake.param >> fake1.log&\n")
-        f.write("dolphot output2 -pphot2.fake.param >> fake2.log&\n")
     subprocess.call('chmod a+x run_fake.sh', shell=True)
     subprocess.call('./run_fake.sh', shell=True)
 
@@ -122,10 +124,24 @@ if __name__ == "__main__":
 
     iso_file = pick_iso()
 
-    generate_fakelist(iso_file, 1, filter1, filter2, num, dm)
-    generate_fakelist(iso_file, 2, filter1, filter2, num, dm)
+    if not os.path.isdir('fake'):
+        subprocess.call('mkdir fake', shell=True)
+
+    df1 = generate_fake_data(iso_file, 1, filter1, filter2, num, dm)
+    df2 = generate_fake_data(iso_file, 2, filter1, filter2, num, dm)
 
     generate_fake_param(1)
     generate_fake_param(2)
 
+    fake_num = int(num / 100)
+    for i in range(fake_num):
+        df1_sel = df1.iloc[i * 100: (i+1) * 100]
+        generate_fakelist(df1_sel, 1, i)
+        df2_sel = df2.iloc[i * 100: (i+1) * 100]
+        generate_fakelist(df2_sel, 2, i)
+
+    with open('run_fake.sh', 'w') as f:
+        for i in range(fake_num):
+            f.write("dolphot output1 -pphot1.fake.param FakeStars=fake/fake1.list{0:0>4} FakeOut=fake/output1.fake{0:0>4} >> fake1.log&\n".format(i))
+            f.write("dolphot output2 -pphot2.fake.param FakeStars=fake/fake2.list{0:0>4} FakeOut=fake/output2.fake{0:0>4} >> fake2.log&\n".format(i))
     run_script()

@@ -10,6 +10,19 @@ import os
 import glob
 
 
+
+def read_data(data_name, w):
+    data = np.loadtxt(data_name)
+    num = np.arange(len(data[:, 0])) + 1
+    world = w.wcs_pix2world(data[:, 2], data[:, 3], 1)
+    ra = world[0]
+    dec = world[1]
+    chip_num = int(data_name.split('.')[0][-1])
+    chip = np.array([chip_num] * len(num))
+    return {'ra': ra, 'dec': dec, 'data': data, 'chip': chip}
+
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("Bfilter", help='Blue Filter name')
@@ -25,27 +38,20 @@ if __name__ == "__main__":
     data_1_name = 'output1.fake'
     data_2_name = 'output2.fake'
 
-    print('Loading raw DOLPHOT file for chip1...')
-    data_1 = np.loadtxt(data_1_name)
-    print('Loaded {0} objects'.format(len(data_1)))
-    num_1 = np.arange(len(data_1[:, 0])) + 1
-    world_1 = w.wcs_pix2world(data_1[:, 2], data_1[:, 3], 1)
+    outputname = glob.glob('fake/output*')
+    data_dict = {'ra': list(), 'dec': list(), 'data': list(), 'chip': list()}
+    for data_name in outputname:
+        data = read_data(data_name, w)
+        for key in data_dict.keys():
+            data_dict[key].append(data[key])
 
-    print('Loading raw DOLPHOT file for chip2...')
-    data_2 = np.loadtxt(data_2_name)
-    print('Loaded {0} objects'.format(len(data_2)))
-    num_2 = np.arange(len(data_2[:, 0])) + len(data_1) + 1
-    world_2 = w.wcs_pix2world(data_2[:, 2], data_2[:, 3], 1)
+    ra = np.concatenate(data_dict['ra'])
+    dec = np.concatenate(data_dict['dec'])
+    data = np.concatenate(data_dict['data'])
+    chip = np.concatenate(data_dict['chip'])
 
-    num = np.append(num_1, num_2)
-    ra = np.append(world_1[0], world_2[0])
-    dec = np.append(world_1[1], world_2[1])
-    data = np.concatenate((data_1, data_2), axis=0)
-    chip = np.append(np.array([1] * len(num_1)), np.array([2] * len(num_2)))
     
     t = astropy.table.Table()
-    t.add_column(astropy.table.Column(name='Number',
-                                      data=num))  # star number
     t.add_column(astropy.table.Column(name='chip',
                                       data=chip))  # chip number
     t.add_column(astropy.table.Column(name='RA', data=ra))  # RA
