@@ -106,6 +106,7 @@ def generate_fake_param(chip_num):
 
 def run_script():
     subprocess.call('chmod a+x run_fake.sh', shell=True)
+    print('Running dolphot ...')
     subprocess.call('./run_fake.sh', shell=True)
 
 
@@ -144,7 +145,7 @@ if __name__ == "__main__":
     with open('run_fake.sh', 'w') as f:
         for i in range(fake_num):
             if i % 8 == 7:
-                f.write("dolphot output1 -pphot1.fake.param FakeStars=fake/fake1.list{0:0>4} FakeOut=fake/output1.fake{0:0>4} >> fake1.log\n".format(i))
+                f.write("dolphot output1 -pphot1.fake.param FakeStars=fake/fake1.list{0:0>4} FakeOut=fake/output1.fake{0:0>4} >> fake1.log&\n".format(i))
                 f.write("dolphot output2 -pphot2.fake.param FakeStars=fake/fake2.list{0:0>4} FakeOut=fake/output2.fake{0:0>4} >> fake2.log\n".format(i))
             else:
                 f.write("dolphot output1 -pphot1.fake.param FakeStars=fake/fake1.list{0:0>4} FakeOut=fake/output1.fake{0:0>4} >> fake1.log&\n".format(i))
