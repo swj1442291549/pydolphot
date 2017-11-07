@@ -54,7 +54,7 @@ def pick_iso():
     return iso_files[index]
 
 
-def generate_fake_data(iso_file, chip_num, filter1, filter2, num_input, dm):
+def generate_fake_data(iso_file, chip_num, filter1, filter2, num_input, dm, age):
     hdu_list = fits.open('final/o.gst.fits')
     data = hdu_list[1].data
     df_o = pd.DataFrame(np.array(data).byteswap().newbyteorder())
@@ -66,7 +66,7 @@ def generate_fake_data(iso_file, chip_num, filter1, filter2, num_input, dm):
 
     df_iso = pd.read_table(
         iso_file, comment='#', delim_whitespace=True)
-    df = df_iso[df_iso['log(age/yr)'] == 9.21]
+    df = df_iso[df_iso['log(age/yr)'] == age]
     df = df[df[filter1] < max(df_chip['{0}_VEGA'.format(filter1)]) + 1 - dm]
     min_m = min(df['M_ini'])
     max_m = max(df['M_ini'])
@@ -115,12 +115,14 @@ if __name__ == "__main__":
     parser.add_argument("Bfilter", help='Blue Filter name (first)')
     parser.add_argument("Rfilter", help='Red Filter name (second)')
     parser.add_argument("dm", type=float, help='Distance Modulus')
+    parser.add_argument("age", type=float, help='Distance Modulus')
     parser.add_argument(
         '-n', type=int, default=10000, help='Number of fake stars')
     args = parser.parse_args()
     filter1 = args.Bfilter
     filter2 = args.Rfilter
     dm = args.dm
+    age = args.age
     num = args.n
 
     iso_file = pick_iso()
@@ -129,8 +131,8 @@ if __name__ == "__main__":
         subprocess.call('rm -rf fake', shell=True)
     subprocess.call('mkdir fake', shell=True)
 
-    df1 = generate_fake_data(iso_file, 1, filter1, filter2, num, dm)
-    df2 = generate_fake_data(iso_file, 2, filter1, filter2, num, dm)
+    df1 = generate_fake_data(iso_file, 1, filter1, filter2, num, dm, age)
+    df2 = generate_fake_data(iso_file, 2, filter1, filter2, num, dm, age)
 
     generate_fake_param(1)
     generate_fake_param(2)
