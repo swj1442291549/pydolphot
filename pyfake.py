@@ -124,8 +124,9 @@ if __name__ == "__main__":
 
     iso_file = pick_iso()
 
-    if not os.path.isdir('fake'):
-        subprocess.call('mkdir fake', shell=True)
+    if os.path.isdir('fake'):
+        subprocess.call('rm -rf fake', shell=True)
+    subprocess.call('mkdir fake', shell=True)
 
     df1 = generate_fake_data(iso_file, 1, filter1, filter2, num, dm)
     df2 = generate_fake_data(iso_file, 2, filter1, filter2, num, dm)
@@ -143,5 +144,5 @@ if __name__ == "__main__":
     with open('run_fake.sh', 'w') as f:
         for i in range(fake_num):
             f.write("dolphot output1 -pphot1.fake.param FakeStars=fake/fake1.list{0:0>4} FakeOut=fake/output1.fake{0:0>4} >> fake1.log&\n".format(i))
-            f.write("dolphot output2 -pphot2.fake.param FakeStars=fake/fake2.list{0:0>4} FakeOut=fake/output2.fake{0:0>4} >> fake2.log&\n".format(i))
+            f.write("dolphot output2 -pphot2.fake.param FakeStars=fake/fake2.list{0:0>4} FakeOut=fake/output2.fake{0:0>4} >> fake2.log\n".format(i))
     run_script()
