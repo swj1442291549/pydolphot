@@ -35,8 +35,32 @@ if __name__ == "__main__":
     hdu_list = fits.open(refname)
     w = wcs.WCS(hdu_list[1].header)
 
-    data_1_name = 'output1.fake'
-    data_2_name = 'output2.fake'
+
+    fakename = glob.glob('fake/fake*')
+    fake_dict = {'ra': list(), 'dec': list(), 'data': list(), 'chip': list()}
+    for data_name in fakename:
+        data = read_data(data_name, w)
+        for key in fake_dict.keys():
+            fake_dict[key].append(data[key])
+    ra = np.concatenate(fake_dict['ra'])
+    dec = np.concatenate(fake_dict['dec'])
+    data = np.concatenate(fake_dict['data'])
+    chip = np.concatenate(fake_dict['chip'])
+
+    t = astropy.table.Table()
+    t.add_column(astropy.table.Column(name='chip',
+                                      data=chip))  # chip number
+    t.add_column(astropy.table.Column(name='RA', data=ra))  # RA
+    t.add_column(astropy.table.Column(name='DEC', data=dec))  # DEC
+    t.add_column(astropy.table.Column(name='X',
+                                      data=data[:, 2]))  # X
+    t.add_column(astropy.table.Column(name='Y',
+                                      data=data[:, 3]))  # Y
+    t.add_column(astropy.table.Column(name='{0}_VEGA'.format(filter1),
+                                      data=data[:, 4])) 
+    t.add_column(astropy.table.Column(name='{0}_VEGA'.format(filter2),
+                                      data=data[:, 5])) 
+    t.write('o.fake.fits', overwrite=True)
 
     outputname = glob.glob('fake/output*')
     data_dict = {'ra': list(), 'dec': list(), 'data': list(), 'chip': list()}
@@ -50,7 +74,6 @@ if __name__ == "__main__":
     data = np.concatenate(data_dict['data'])
     chip = np.concatenate(data_dict['chip'])
 
-    
     t = astropy.table.Table()
     t.add_column(astropy.table.Column(name='chip',
                                       data=chip))  # chip number
@@ -98,3 +121,4 @@ if __name__ == "__main__":
         subprocess.call('mkdir final', shell=True)
     subprocess.call('mv o.fake.summary.fits final', shell=True)
     subprocess.call('mv o.fake.gst.fits final', shell=True)
+    subprocess.call('mv o.fake.fits final', shell=True)
