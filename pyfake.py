@@ -68,6 +68,8 @@ def generate_fake_data(iso_file, chip_num, filter1, filter2, num_input, dm, age,
     df = df_iso[df_iso['log(age/yr)'] == age]
     df = df[df[filter1] < max(df_chip['{0}_VEGA'.format(filter1)]) + 1 - dm]
     print('Generating fake masses ...')
+    min_m = max(min(df['M_ini']), min_m)
+    max_m = min(max(df['M_ini']), max_m)
     mass_fake = kroupa_gen(num, min_m, max_m)
     f1 = interp1d(df['M_ini'], df[filter1])
     f2 = interp1d(df['M_ini'], df[filter2])
@@ -115,7 +117,7 @@ if __name__ == "__main__":
     parser.add_argument(
         '--min', type=float, default=0.1, help='Minimum initial mass')
     parser.add_argument(
-        '--max', type=float, default=2, help='Maxmimum initial mass')
+        '--max', type=float, default=1.9, help='Maxmimum initial mass')
     parser.add_argument(
         '-n', type=int, default=10000, help='Number of fake stars')
     args = parser.parse_args()
@@ -124,6 +126,8 @@ if __name__ == "__main__":
     dm = args.dm
     age = args.age
     num = args.n
+    min_m = args.min
+    max_m = args.max
 
     iso_file = pick_iso()
 
