@@ -54,7 +54,7 @@ def pick_iso():
     return iso_files[index]
 
 
-def generate_fake_data(iso_file, chip_num, filter1, filter2, num_input, dm, age):
+def generate_fake_data(iso_file, chip_num, filter1, filter2, num_input, dm, age, min_m, max_m):
     hdu_list = fits.open('final/o.gst.fits')
     data = hdu_list[1].data
     df_o = pd.DataFrame(np.array(data).byteswap().newbyteorder())
@@ -63,13 +63,10 @@ def generate_fake_data(iso_file, chip_num, filter1, filter2, num_input, dm, age)
     Y_min = min(df_chip['Y'])
     X_max = max(df_chip['X'])
     Y_max = max(df_chip['Y'])
-
     df_iso = pd.read_table(
         iso_file, comment='#', delim_whitespace=True)
     df = df_iso[df_iso['log(age/yr)'] == age]
     df = df[df[filter1] < max(df_chip['{0}_VEGA'.format(filter1)]) + 1 - dm]
-    min_m = min(df['M_ini'])
-    max_m = max(df['M_ini'])
     print('Generating fake masses ...')
     mass_fake = kroupa_gen(num, min_m, max_m)
     f1 = interp1d(df['M_ini'], df[filter1])
@@ -86,7 +83,6 @@ def generate_fake_data(iso_file, chip_num, filter1, filter2, num_input, dm, age)
     Y_max = max(df_chip['Y'])
     X_fake = np.random.uniform(X_min, X_max, num)
     Y_fake = np.random.uniform(Y_min, Y_max, num)
-
     return pd.DataFrame({'X': X_fake, 'Y': Y_fake, 'f1': filter1_fake + dm, 'f2': filter2_fake + dm})
     
 
@@ -117,6 +113,10 @@ if __name__ == "__main__":
     parser.add_argument("dm", type=float, help='Distance Modulus')
     parser.add_argument("age", type=float, help='Distance Modulus')
     parser.add_argument(
+        '--min', type=float, default=0.1, help='Minimum initial mass')
+    parser.add_argument(
+        '--max', type=float, default=2, help='Maxmimum initial mass')
+    parser.add_argument(
         '-n', type=int, default=10000, help='Number of fake stars')
     args = parser.parse_args()
     filter1 = args.Bfilter
@@ -131,8 +131,8 @@ if __name__ == "__main__":
         subprocess.call('rm -rf fake', shell=True)
     subprocess.call('mkdir fake', shell=True)
 
-    df1 = generate_fake_data(iso_file, 1, filter1, filter2, num, dm, age)
-    df2 = generate_fake_data(iso_file, 2, filter1, filter2, num, dm, age)
+    df1 = generate_fake_data(iso_file, 1, filter1, filter2, num, dm, age, min_m, max_m)
+    df2 = generate_fake_data(iso_file, 2, filter1, filter2, num, dm, age, min_m, max_m)
 
     generate_fake_param(1)
     generate_fake_param(2)
