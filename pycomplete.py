@@ -16,7 +16,6 @@ def generate_fake_data(num):
     hdu_list = fits.open('final/o.gst.fits')
     data = hdu_list[1].data
     df = pd.DataFrame(np.array(data).byteswap().newbyteorder())
-    df = pickle.load(open('rg.pickle', 'rb'))
     ra_rand = list()
     dec_rand = list()
     for i in range(len(df)):
