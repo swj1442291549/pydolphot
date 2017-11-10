@@ -104,7 +104,7 @@ if __name__ == "__main__":
     sharp = 0.04
     crowd = 0.5
     objtype = 1
-    flag = 1
+    flag = 99
 
     wgood = np.where(
         (t[filter1 + '_SNR'] >= snr) & (t[filter2 + '_SNR'] >= snr) &
