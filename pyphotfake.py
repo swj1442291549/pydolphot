@@ -8,6 +8,8 @@ import argparse
 import subprocess
 import os
 import glob
+import pickle
+import pandas as pd
 
 
 
@@ -22,103 +24,60 @@ def read_data(data_name, w):
     return {'ra': ra, 'dec': dec, 'data': data, 'chip': chip}
 
 
+def read_pickle(file_name, filter1, filter2):
+    df = pickle.load(open(file_name, 'rb'))
+    df = df.sort_values(by=['X'])
+    f1_index = list(df.columns).index('{0}_VEGA'.format(filter1))
+    f2_index = list(df.columns).index('{0}_VEGA'.format(filter2))
+    df.columns.values[f1_index] = '{0}_VEGA_IN'.format(filter1)
+    df.columns.values[f2_index] = '{0}_VEGA_IN'.format(filter2)
+    return df
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument("name", help='DataFrame pickle file name')
     parser.add_argument("Bfilter", help='Blue Filter name')
     parser.add_argument("Rfilter", help='Red Filter name')
+    parser.add_argument('n', type=int, default=100, help='Number of fake stars')
     args = parser.parse_args()
+    file_name = args.name
     filter1 = args.Bfilter
     filter2 = args.Rfilter
+    num_step = args.n
 
     refname = glob.glob('*drz.fits')[0]
     hdu_list = fits.open(refname)
     w = wcs.WCS(hdu_list[1].header)
 
+    df = read_pickle(file_name, filter1, filter2)
+    df_dict = {1: df[df['chip'] == 1], 2: df[df['chip'] == 2]}
 
-    fakename = glob.glob('fake/fake*')
-    fake_dict = {'ra': list(), 'dec': list(), 'data': list(), 'chip': list()}
-    for data_name in fakename:
-        data = read_data(data_name, w)
-        for key in fake_dict.keys():
-            fake_dict[key].append(data[key])
-    ra = np.concatenate(fake_dict['ra'])
-    dec = np.concatenate(fake_dict['dec'])
-    data = np.concatenate(fake_dict['data'])
-    chip = np.concatenate(fake_dict['chip'])
 
-    t = astropy.table.Table()
-    t.add_column(astropy.table.Column(name='chip',
-                                      data=chip))  # chip number
-    t.add_column(astropy.table.Column(name='RA', data=ra))  # RA
-    t.add_column(astropy.table.Column(name='DEC', data=dec))  # DEC
-    t.add_column(astropy.table.Column(name='X',
-                                      data=data[:, 2]))  # X
-    t.add_column(astropy.table.Column(name='Y',
-                                      data=data[:, 3]))  # Y
-    t.add_column(astropy.table.Column(name='{0}_VEGA'.format(filter1),
-                                      data=data[:, 4])) 
-    t.add_column(astropy.table.Column(name='{0}_VEGA'.format(filter2),
-                                      data=data[:, 5])) 
-    t.write('o.fake.fits', overwrite=True)
 
-    outputname = glob.glob('fake/output*')
-    data_dict = {'ra': list(), 'dec': list(), 'data': list(), 'chip': list()}
-    for data_name in outputname:
-        data = read_data(data_name, w)
-        for key in data_dict.keys():
-            data_dict[key].append(data[key])
+    final_list = list()
+    output_names = glob.glob('fake/output*')
+    for output_name in output_names:
+        chip_num = int(output_name.split('.')[0][-1])
+        step = int(output_name[-4:])
+        data = np.loadtxt(output_name)
+        df_sel = df_dict[chip_num].iloc[num_step * step: num_step * (step + 1)]
+        df_start_index = 0
+        for data_item in data:
+            x_data = data_item[2]
+            y_data = data_item[3]
+            f1 = data_item[31]
+            f2 = data_item[44]
+            if f1 > 99 or f2 > 99:
+                continue
+            else:
+                data_series = pd.Series([f1, f2], index=['{0}_VEGA'.format(filter1), '{0}_VEGA'.format(filter2)])
+                for i in range(df_start_index, num_step):
+                    item = df_sel.iloc[i]
+                    if np.abs(x_data - item['X']) < 0.01 and np.abs(y_data - item['Y']) < 0.01:
+                        df_start_index = i
+                        final_list.append(pd.DataFrame(item.append(data_series).to_dict(), index=[0]))
+                        break
 
-    ra = np.concatenate(data_dict['ra'])
-    dec = np.concatenate(data_dict['dec'])
-    data = np.concatenate(data_dict['data'])
-    chip = np.concatenate(data_dict['chip'])
-
-    t = astropy.table.Table()
-    t.add_column(astropy.table.Column(name='chip',
-                                      data=chip))  # chip number
-    t.add_column(astropy.table.Column(name='RA', data=ra))  # RA
-    t.add_column(astropy.table.Column(name='DEC', data=dec))  # DEC
-    t.add_column(astropy.table.Column(name='X',
-                                      data=data[:, 2]))  # X
-    t.add_column(astropy.table.Column(name='Y',
-                                      data=data[:, 3]))  # Y
-    t.add_column(astropy.table.Column(name='{0}_NUM'.format(filter1),
-                                      data=data[:, 4])) 
-    t.add_column(astropy.table.Column(name='{0}_VEGA_IN'.format(filter1),
-                                      data=data[:, 5])) 
-    t.add_column(astropy.table.Column(name='{0}_NUM'.format(filter2),
-                                      data=data[:, 6])) 
-    t.add_column(astropy.table.Column(name='{0}_VEGA_IN'.format(filter2),
-                                      data=data[:, 7])) 
-
-    filter_labels = ['_VEGA', '_ERR', '_SNR', '_SHARP', '_ROUND', '_CROWD', '_FLAG']
-    cols = np.int_(np.asarray((31, 33, 35, 36, 37, 38, 39)))
-    for j, k in enumerate(filter_labels):
-        t.add_column(astropy.table.Column(name=filter1 + k, data=data[:, cols[j]]))
-        t.add_column(astropy.table.Column(name=filter2 + k, data=data[:, cols[j] + 13]))
-
-    t.write('o.fake.summary.fits', overwrite=True)
-
-    snr = 5.
-    sharp = 0.04
-    crowd = 0.5
-    objtype = 1
-    flag = 99
-
-    wgood = np.where(
-        (t[filter1 + '_SNR'] >= snr) & (t[filter2 + '_SNR'] >= snr) &
-        (t[filter1 + '_SHARP']**2 <
-         sharp) & (t[filter2 + '_SHARP']**2 <
-                   sharp) & (t[filter1 + '_CROWD'] < crowd) &
-        (t[filter2 + '_CROWD'] < crowd) &
-        (t[filter1 + '_FLAG'] <= flag) & (t[filter2 + '_FLAG'] <= flag))
-
-    t1 = t[wgood]
-    t1.write('o.fake.gst.fits', overwrite=True)
-
-    if not os.path.isdir("final"):
-        subprocess.call('mkdir final', shell=True)
-    subprocess.call('mv o.fake.summary.fits final', shell=True)
-    subprocess.call('mv o.fake.gst.fits final', shell=True)
-    subprocess.call('mv o.fake.fits final', shell=True)
+    df = pd.concat(final_list)
+    df.reset_index(drop=True, inplace=True)
+    df.to_pickle('final/df_fake.pickle')
