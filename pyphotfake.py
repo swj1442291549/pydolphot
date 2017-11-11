@@ -80,4 +80,7 @@ if __name__ == "__main__":
 
     df = pd.concat(final_list)
     df.reset_index(drop=True, inplace=True)
-    df.to_pickle('final/df_fake.pickle')
+    df.to_pickle('df_fake.pickle')
+
+    subprocess.call('mv df.pickle final', shell=True)
+    subprocess.call('mv df_fake.pickle final', shell=True)
