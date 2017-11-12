@@ -57,26 +57,31 @@ if __name__ == "__main__":
     final_list = list()
     output_names = glob.glob('fake/output*')
     for output_name in output_names:
-        chip_num = int(output_name.split('.')[0][-1])
-        step = int(output_name[-4:])
-        data = np.loadtxt(output_name)
-        df_sel = df_dict[chip_num].iloc[num_step * step: num_step * (step + 1)]
-        df_start_index = 0
-        for data_item in data:
-            x_data = data_item[2]
-            y_data = data_item[3]
-            f1 = data_item[31]
-            f2 = data_item[44]
-            if f1 > 99 or f2 > 99:
-                continue
-            else:
-                data_series = pd.Series([f1, f2], index=['{0}_VEGA'.format(filter1), '{0}_VEGA'.format(filter2)])
-                for i in range(df_start_index, num_step):
-                    item = df_sel.iloc[i]
-                    if np.abs(x_data - item['X']) < 0.01 and np.abs(y_data - item['Y']) < 0.01:
-                        df_start_index = i
-                        final_list.append(pd.DataFrame(item.append(data_series).to_dict(), index=[0]))
-                        break
+        if os.stat(output_name).st_size == 0:
+            continue
+        else:
+            data = np.loadtxt(output_name)
+            chip_num = int(output_name.split('.')[0][-1])
+            step = int(output_name[-4:])
+            df_sel = df_dict[chip_num].iloc[num_step * step: num_step * (step + 1)]
+            df_start_index = 0
+            if len(data.shape) == 1:
+                data = [data]
+            for data_item in data:
+                x_data = data_item[2]
+                y_data = data_item[3]
+                f1 = data_item[31]
+                f2 = data_item[44]
+                if f1 > 99 or f2 > 99:
+                    continue
+                else:
+                    data_series = pd.Series([f1, f2], index=['{0}_VEGA'.format(filter1), '{0}_VEGA'.format(filter2)])
+                    for i in range(df_start_index, num_step):
+                        item = df_sel.iloc[i]
+                        if np.abs(x_data - item['X']) < 0.01 and np.abs(y_data - item['Y']) < 0.01:
+                            df_start_index = i
+                            final_list.append(pd.DataFrame(item.append(data_series).to_dict(), index=[0]))
+                            break
 
     df = pd.concat(final_list)
     df.reset_index(drop=True, inplace=True)
