@@ -1,7 +1,5 @@
 import numpy as np
-import sys
 import astropy.table
-from astropy import units as u
 from astropy.io import fits
 from astropy import wcs
 import argparse
@@ -11,6 +9,7 @@ import glob
 import pickle
 import pandas as pd
 from tqdm import tqdm
+from multiprocessing import Pool
 
 
 def read_data(data_name, w):
@@ -51,6 +50,7 @@ if __name__ == "__main__":
     filter2 = args.Rfilter
     num_step = args.num
 
+    print('Reading ...')
     refname = glob.glob('*drz.fits')[0]
     hdu_list = fits.open(refname)
     w = wcs.WCS(hdu_list[1].header)
@@ -68,19 +68,23 @@ if __name__ == "__main__":
         labels_list.append('{0}{1}'.format(filter1, label))
     for label in filter_labels:
         labels_list.append('{0}{1}'.format(filter2, label))
+    df_raw = pd.DataFrame(columns=labels_list + [
+        'X', 'Y', 'chip', '{0}_VEGA_IN'.format(filter1), '{0}_VEGA_IN'.format(
+            filter2)
+    ])
 
     final_list = list()
     output_names = glob.glob('{0}/output*'.format(folder))
-    for output_name in tqdm(output_names):
-        if os.stat(output_name).st_size == 0:
-            continue
-        else:
+
+    def inner_extract(output_name):
+        df = df_raw
+        if os.stat(output_name).st_size != 0:
             data = np.loadtxt(output_name)
             chip_num = int(output_name.split('.')[0][-1])
             step = int(output_name[-4:])
             df_sel = df_dict[chip_num].iloc[num_step * step:num_step * (
                 step + 1)]
-            df_start_index = 0
+            final_list = []
             if len(data.shape) == 1:
                 data = [data]
             for data_item in data:
@@ -92,16 +96,16 @@ if __name__ == "__main__":
                 for i, index in enumerate(index_array):
                     f[i + 7] = data_item[index + 13]
                 data_series = pd.Series(f, index=labels_list)
-                for i in range(df_start_index, num_step):
-                    item = df_sel.iloc[i]
-                    if np.abs(x_data - item['X']) < 0.01 and np.abs(
-                            y_data - item['Y']) < 0.01:
-                        df_start_index = i
-                        final_list.append(
-                            pd.DataFrame(
-                                item.append(data_series).to_dict(), index=[0]))
-                        break
-    df = pd.concat(final_list)
+                item = df_sel[(x_data - df_sel['X'])**2 +
+                              (y_data - df_sel['Y'])**2 < 0.0002].iloc[0]
+                df = df.append(item.append(data_series), ignore_index=True)
+        return df
+
+    pool = Pool(20)
+    result = pool.map(inner_extract, output_names)
+    pool.close()
+
+    df = pd.concat(result)
     df.reset_index(drop=True, inplace=True)
 
     print('Selecting ...')
@@ -109,15 +113,11 @@ if __name__ == "__main__":
     sharp = 0.04
     crowd = 0.5
     flag = np.zeros(len(df))
-    for i in range(len(df)):
-        item = df.iloc[i]
-        if (item[filter1 + '_SNR'] >=
-                snr) and (item[filter2 + '_SNR'] >=
-                          snr) and (item[filter1 + '_SHARP']**2 < sharp) and (
-                              item[filter2 + '_SHARP']**2 < sharp) and (
-                                  item[filter1 + '_CROWD'] <
-                                  crowd) and (item[filter2 + "_CROWD"] < crowd):
-            flag[i] = 1
+    for item in df.itertuples():
+        if (item[3] >= snr) and (item[10] >= snr) and (item[4]**2 > sharp) and (
+                item[11]**2 > sharp) and (item[6] < crowd) and (item[13] <
+                                                                crowd):
+            flag[item[0]] = 1
     df = df.assign(flag=flag)
 
     print('Saving ...')
