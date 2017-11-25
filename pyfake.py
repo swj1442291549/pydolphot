@@ -41,9 +41,9 @@ if __name__ == "__main__":
     parser.add_argument("Bfilter", help='Blue Filter name (first)')
     parser.add_argument("Rfilter", help='Red Filter name (second)')
     parser.add_argument(
-        "-f", '--folder', default='fake', help='Output folder name')
+        "-f", '--folder', default='fake', help='Output folder name (fake)')
     parser.add_argument(
-        '-n', '--num', type=int, default=100, help='Number of fake stars')
+        '-n', '--num', type=int, default=100, help='Number of fake stars (100)')
     args = parser.parse_args()
     folder = args.folder
     filter1 = args.Bfilter
