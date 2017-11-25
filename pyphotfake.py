@@ -81,7 +81,7 @@ if __name__ == "__main__":
         if os.stat(output_name).st_size != 0:
             data = np.loadtxt(output_name)
             chip_num = int(output_name.split('.')[0][-1])
-            step = int(output_name[-4:])
+            step = int(output_name.split('fake')[-1])
             df_sel = df_dict[chip_num].iloc[num_step * step:num_step * (
                 step + 1)]
             final_list = []
