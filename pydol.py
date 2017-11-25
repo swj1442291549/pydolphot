@@ -5,6 +5,7 @@ import sys
 import subprocess
 from astropy.io import fits
 import pandas as pd
+from multiprocessing import Pool
 
 
 def extract_ref(rawdir='raw/'):
@@ -21,6 +22,7 @@ def extract_ref(rawdir='raw/'):
 
 
 def gen_frame(ref_file, rawdir='raw/'):
+    print('Reading ...')
     rawfiles = sorted(glob.glob(rawdir + '/*fits*'))
     if not rawfiles:
         raise IOError('No images found')
@@ -87,6 +89,7 @@ def load_files(df, rawdir='raw/'):
 
 
 def mask_files(df):
+    print('Masking ...')
     for i in range(len(df)):
         if df.iloc[i]['inst'] == 'WFC3':
             subprocess.call(
@@ -98,12 +101,14 @@ def mask_files(df):
 
 
 def split_files(df):
+    print('Splitting ...')
     for i in range(len(df)):
         subprocess.call(
             "splitgroups " + df.iloc[i]['img_name'] + " > phot.log", shell=True)
 
 
 def calsky_files(df):
+    print('Calculating sky ...')
     for i in range(len(df)):
         if df.iloc[i]['inst'] == 'WFC3':
             wfc3_calsky(df.iloc[i])
@@ -241,8 +246,8 @@ def param_files(df):
         f.write("img0_shift=0 0\n")
         f.write("img0_xform=1 0 0\n")
         for i in range(len(df_img)):
-            f.write("img{0:d}_file = {1}\n".format(i + 1, df_img.iloc[i][
-                'img_name'].replace('.fits', '.chip1')))
+            f.write("img{0:d}_file = {1}\n".format(
+                i + 1, df_img.iloc[i]['img_name'].replace('.fits', '.chip1')))
         for i in range(len(df_img)):
             if df_img.iloc[i]['inst'] == 'WFC3':
                 if df_img.iloc[i]['detect'] == 'UVIS':
@@ -271,8 +276,8 @@ def param_files(df):
         f.write("img0_shift=0 0\n")
         f.write("img0_xform=1 0 0\n")
         for i in range(len(df_img)):
-            f.write("img{0:d}_file={1}\n".format(i + 1, df_img.iloc[i][
-                'img_name'].replace('.fits', '.chip2')))
+            f.write("img{0:d}_file={1}\n".format(
+                i + 1, df_img.iloc[i]['img_name'].replace('.fits', '.chip2')))
         for i in range(len(df_img)):
             if df_img.iloc[i]['inst'] == 'WFC3':
                 if df_img.iloc[i]['detect'] == 'UVIS':
@@ -294,15 +299,6 @@ def param_files(df):
             f.write(i + '=' + np.str(dolphot_params[i]) + "\n")
 
 
-def run_script():
-    with open('run.sh', 'w') as f:
-        f.write("dolphot output1 -pphot1.param >> phot1.log &\n")
-        f.write("dolphot output2 -pphot2.param >> phot2.log &\n")
-    subprocess.call('chmod a+x run.sh', shell=True)
-    subprocess.call('./run.sh', shell=True)
-    
-
-
 if __name__ == "__main__":
     ref_file = extract_ref()
     df = gen_frame(ref_file)
@@ -311,4 +307,17 @@ if __name__ == "__main__":
     split_files(df)
     calsky_files(df)
     param_files(df)
-    run_script()
+    print('Running ...')
+
+    def inner_dolphot(chip_num):
+        subprocess.call(
+            [
+                'dolphot', 'output{0}'.format(chip_num),
+                '-pphot{0}.param'.format(chip_num)
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE)
+
+    pool = Pool(2)
+    pool.map(inner_dolphot, [1, 2])
+    pool.close()
