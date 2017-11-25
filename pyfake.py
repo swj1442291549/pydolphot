@@ -64,12 +64,12 @@ if __name__ == "__main__":
     generate_fake_param(1, folder)
     generate_fake_param(2, folder)
 
-    print('Generating fake 1...')
+    print('Generating fake 1 ...')
     fake1_num = int(len(df1) / num_step)
     for i in tqdm(range(fake1_num)):
         df1_sel = df1.iloc[i * num_step:(i + 1) * num_step]
         generate_fakelist(df1_sel, 1, i, filter1, filter2, folder)
-    print('Generating fake 2...')
+    print('Generating fake 2 ...')
     fake2_num = int(len(df2) / num_step)
     for i in tqdm(range(fake2_num)):
         df2_sel = df2.iloc[i * num_step:(i + 1) * num_step]
