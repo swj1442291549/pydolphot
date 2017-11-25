@@ -101,9 +101,10 @@ if __name__ == "__main__":
                 df = df.append(item.append(data_series), ignore_index=True)
         return df
 
-    pool = Pool(20)
-    result = pool.map(inner_extract, output_names)
-    pool.close()
+    with Pool(30) as p:
+        with tqdm(total=len(output_names)) as pbar:
+            for i, _ in tqdm(enumerate(p.imap_unordered(inner_extract, output_names))):
+                pbar.update()
 
     df = pd.concat(result)
     df.reset_index(drop=True, inplace=True)
@@ -114,8 +115,8 @@ if __name__ == "__main__":
     crowd = 0.5
     flag = np.zeros(len(df))
     for item in df.itertuples():
-        if (item[3] >= snr) and (item[10] >= snr) and (item[4]**2 > sharp) and (
-                item[11]**2 > sharp) and (item[6] < crowd) and (item[13] <
+        if (item[3] >= snr) and (item[10] >= snr) and (item[4]**2 < sharp) and (
+                item[11]**2 < sharp) and (item[6] < crowd) and (item[13] <
                                                                 crowd):
             flag[item[0]] = 1
     df = df.assign(flag=flag)
@@ -123,5 +124,4 @@ if __name__ == "__main__":
     print('Saving ...')
     df.to_pickle('df_{0}.pickle'.format(folder))
 
-    subprocess.call('mv {0} final'.format(file_name), shell=True)
     subprocess.call('mv df_{0}.pickle final'.format(folder), shell=True)
