@@ -41,17 +41,15 @@ if __name__ == "__main__":
     parser.add_argument("Bfilter", help='Blue Filter name (first)')
     parser.add_argument("Rfilter", help='Red Filter name (second)')
     parser.add_argument(
-        "-p", '--pkl', default='df.pickle', help='DataFrame pickle file name')
-    parser.add_argument(
         "-f", '--folder', default='fake', help='Output folder name')
     parser.add_argument(
         '-n', '--num', type=int, default=100, help='Number of fake stars')
     args = parser.parse_args()
-    file_name = args.pkl
     folder = args.folder
     filter1 = args.Bfilter
     filter2 = args.Rfilter
     num_step = args.num
+    file_name = '{0}.pickle'.format(folder)
 
     if os.path.isdir(folder):
         subprocess.call('rm -rf {0}'.format(folder), shell=True)
