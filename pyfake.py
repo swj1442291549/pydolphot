@@ -7,28 +7,27 @@ import argparse
 import glob
 import random
 import pickle
+from multiprocessing import Pool
+from tqdm import tqdm
 
 
-    
-
-def generate_fakelist(df, chip_num, fake_num, filter1, filter2):
-    with open('fake/fake{0}.list{1:0>4}'.format(chip_num, fake_num), 'w') as f:
+def generate_fakelist(df, chip_num, fake_num, filter1, filter2, folder):
+    with open('{0}/fake{1}.list{2:0>4}'.format(folder, chip_num, fake_num),
+              'w') as f:
         for i in range(len(df)):
-            f.write('0 1 {0} {1} {2} {3}\n'.format(df.iloc[i]['X'], df.iloc[i]['Y'], df.iloc[i]['{0}_VEGA'.format(filter1)], df.iloc[i]['{0}_VEGA'.format(filter2)]))
+            f.write('0 1 {0} {1} {2} {3}\n'.format(
+                df.iloc[i]['X'], df.iloc[i]['Y'],
+                df.iloc[i]['{0}_VEGA'.format(filter1)],
+                df.iloc[i]['{0}_VEGA'.format(filter2)]))
 
 
-def generate_fake_param(chip_num):
+def generate_fake_param(chip_num, folder):
     subprocess.call(
-        'cp phot{0}.param phot{0}.fake.param'.format(chip_num), shell=True)
+        'cp phot{0}.param phot{0}.{1}.param'.format(chip_num, folder),
+        shell=True)
     with open('phot{0}.fake.param'.format(chip_num), 'a') as f:
         f.write("RandomFake=1\n")
         f.write("FakeMatch=3.0\n")
-
-
-def run_script():
-    subprocess.call('chmod a+x run_fake.sh', shell=True)
-    print('Running dolphot ...')
-    subprocess.call('./run_fake.sh', shell=True)
 
 
 def read_pickle(file_name):
@@ -36,48 +35,55 @@ def read_pickle(file_name):
     df = df.sort_values(by=['X'])
     return df
 
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("name", help='DataFrame pickle file name')
     parser.add_argument("Bfilter", help='Blue Filter name (first)')
     parser.add_argument("Rfilter", help='Red Filter name (second)')
-    parser.add_argument('-n', type=int, default=100, help='Number of fake stars')
+    parser.add_argument(
+        "-p", '--pkl', default='df.pickle', help='DataFrame pickle file name')
+    parser.add_argument(
+        "-f", '--folder', default='fake', help='Output folder name')
+    parser.add_argument(
+        '-n', '--num', type=int, default=100, help='Number of fake stars')
     args = parser.parse_args()
-    file_name = args.name
+    file_name = args.pkl
+    folder = args.folder
     filter1 = args.Bfilter
     filter2 = args.Rfilter
-    num_step = args.n
+    num_step = args.num
 
-    if os.path.isdir('fake'):
-        subprocess.call('rm -rf fake', shell=True)
-    subprocess.call('mkdir fake', shell=True)
+    if os.path.isdir(folder):
+        subprocess.call('rm -rf {0}'.format(folder), shell=True)
+    subprocess.call('mkdir {0}'.format(folder), shell=True)
 
+    print('Reading ...')
     df = read_pickle(file_name)
 
     df1 = df[df['chip'] == 1]
     df2 = df[df['chip'] == 2]
 
-    generate_fake_param(1)
-    generate_fake_param(2)
+    generate_fake_param(1, folder)
+    generate_fake_param(2, folder)
 
+    print('Generating ...')
     fake1_num = int(len(df1) / num_step)
     for i in range(fake1_num):
-        df1_sel = df1.iloc[i * num_step: (i+1) * num_step]
-        generate_fakelist(df1_sel, 1, i, filter1, filter2)
+        df1_sel = df1.iloc[i * num_step:(i + 1) * num_step]
+        generate_fakelist(df1_sel, 1, i, filter1, filter2, folder)
     fake2_num = int(len(df2) / num_step)
     for i in range(fake2_num):
-        df2_sel = df2.iloc[i * num_step: (i+1) * num_step]
-        generate_fakelist(df2_sel, 2, i, filter1, filter2)
+        df2_sel = df2.iloc[i * num_step:(i + 1) * num_step]
+        generate_fakelist(df2_sel, 2, i, filter1, filter2, folder)
 
-    with open('run_fake.sh', 'w') as f:
-        for i in range(fake1_num):
-            if i % 15 == 14:
-                f.write("dolphot output1 -pphot1.fake.param FakeStars=fake/fake1.list{0:0>4} FakeOut=fake/output1.fake{0:0>4} >> fake1.log\n".format(i))
-            else:
-                f.write("dolphot output1 -pphot1.fake.param FakeStars=fake/fake1.list{0:0>4} FakeOut=fake/output1.fake{0:0>4} >> fake1.log&\n".format(i))
-        for i in range(fake2_num):
-            if i % 15 == 14:
-                f.write("dolphot output2 -pphot2.fake.param FakeStars=fake/fake2.list{0:0>4} FakeOut=fake/output2.fake{0:0>4} >> fake2.log\n".format(i))
-            else:
-                f.write("dolphot output2 -pphot2.fake.param FakeStars=fake/fake2.list{0:0>4} FakeOut=fake/output2.fake{0:0>4} >> fake2.log&\n".format(i))
-    run_script()
+    print('Running ...')
+    output_names = glob.glob('{0}/fake*'.format(folder))
+    def inner_dolphot(output_name):
+        chip_num = int(output_name.split('list')[0][-2])
+        index = int(output_name.split('list')[1])
+        subprocess.call(['dolphot', 'output{0}'.format(chip_num), '-pphot{0}.{1}.param'.format(chip_num, folder), 'FakeStars={0}/fake{1}.list{2:0>4}'.format(folder, chip_num, index), 'FakeOut={0}/output{1}.fake{2:0>4}'.format(folder, chip_num, index)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+
+    with Pool(30) as p:
+        with tqdm(total=len(output_names)) as pbar:
+            for i, _ in tqdm(enumerate(p.imap_unordered(inner_dolphot, output_names))):
+                pbar.update()
