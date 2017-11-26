@@ -51,38 +51,42 @@ if __name__ == "__main__":
     num_step = args.num
     file_name = '{0}.pickle'.format(folder)
 
-    if os.path.isdir(folder):
-        subprocess.call('rm -rf {0}'.format(folder), shell=True)
-    subprocess.call('mkdir {0}'.format(folder), shell=True)
+    if not os.path.isdir(folder):
+        subprocess.call('mkdir {0}'.format(folder), shell=True)
+    else:
+        is_remove = input('Folder {0} already exists. Are you sure to remove it? (y/n) '.format(folder))
+        if is_remove == 'y':
+            subprocess.call('rm -rf {0}'.format(folder), shell=True)
+            subprocess.call('mkdir {0}'.format(folder), shell=True)
 
-    print('Reading ...')
-    df = read_pickle(file_name)
+            print('Reading ...')
+            df = read_pickle(file_name)
 
-    df1 = df[df['chip'] == 1]
-    df2 = df[df['chip'] == 2]
+            df1 = df[df['chip'] == 1]
+            df2 = df[df['chip'] == 2]
 
-    generate_fake_param(1, folder)
-    generate_fake_param(2, folder)
+            generate_fake_param(1, folder)
+            generate_fake_param(2, folder)
 
-    print('Generating fake 1 ...')
-    fake1_num = int(len(df1) / num_step)
-    for i in tqdm(range(fake1_num)):
-        df1_sel = df1.iloc[i * num_step:(i + 1) * num_step]
-        generate_fakelist(df1_sel, 1, i, filter1, filter2, folder)
-    print('Generating fake 2 ...')
-    fake2_num = int(len(df2) / num_step)
-    for i in tqdm(range(fake2_num)):
-        df2_sel = df2.iloc[i * num_step:(i + 1) * num_step]
-        generate_fakelist(df2_sel, 2, i, filter1, filter2, folder)
+            print('Generating fake 1 ...')
+            fake1_num = int(len(df1) / num_step)
+            for i in tqdm(range(fake1_num)):
+                df1_sel = df1.iloc[i * num_step:(i + 1) * num_step]
+                generate_fakelist(df1_sel, 1, i, filter1, filter2, folder)
+            print('Generating fake 2 ...')
+            fake2_num = int(len(df2) / num_step)
+            for i in tqdm(range(fake2_num)):
+                df2_sel = df2.iloc[i * num_step:(i + 1) * num_step]
+                generate_fakelist(df2_sel, 2, i, filter1, filter2, folder)
 
-    print('Running ...')
-    output_names = glob.glob('{0}/fake*'.format(folder))
-    def inner_dolphot(output_name):
-        chip_num = int(output_name.split('list')[0][-2])
-        index = int(output_name.split('list')[1])
-        subprocess.call(['dolphot', 'output{0}'.format(chip_num), '-pphot{0}.{1}.param'.format(chip_num, folder), 'FakeStars={0}/fake{1}.list{2:0>4}'.format(folder, chip_num, index), 'FakeOut={0}/output{1}.fake{2:0>4}'.format(folder, chip_num, index)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            print('Running ...')
+            output_names = glob.glob('{0}/fake*'.format(folder))
+            def inner_dolphot(output_name):
+                chip_num = int(output_name.split('list')[0][-2])
+                index = int(output_name.split('list')[1])
+                subprocess.call(['dolphot', 'output{0}'.format(chip_num), '-pphot{0}.{1}.param'.format(chip_num, folder), 'FakeStars={0}/fake{1}.list{2:0>4}'.format(folder, chip_num, index), 'FakeOut={0}/output{1}.fake{2:0>4}'.format(folder, chip_num, index)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-    with Pool(30) as p:
-        with tqdm(total=len(output_names)) as pbar:
-            for i, _ in tqdm(enumerate(p.imap_unordered(inner_dolphot, output_names))):
-                pbar.update()
+            with Pool(30) as p:
+                with tqdm(total=len(output_names)) as pbar:
+                    for i, _ in tqdm(enumerate(p.imap_unordered(inner_dolphot, output_names))):
+                        pbar.update()
