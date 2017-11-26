@@ -112,12 +112,10 @@ if __name__ == "__main__":
     sharp = 0.04
     crowd = 0.5
     flag = np.zeros(len(df))
-    for item in df.itertuples():
-        if (item[3] >= snr) and (item[10] >= snr) and (item[4]**2 < sharp) and (
-                item[11]**2 < sharp) and (item[6] < crowd) and (item[13] <
-                                                                crowd):
-            flag[item[0]] = 1
-    df = df.assign(flag=flag)
+
+    index = (df['{0}_SNR'.format(filter1)] > snr) & (df['{0}_SNR'.format(filter2)] > snr) & (df['{0}_SHARP'.format(filter1)] ** 2 < sharp) & (df['{0}_SHARP'.format(filter2)] ** 2 < sharp) & (df['{0}_CROWD'.format(filter1)] < crowd) & (df['{0}_CROWD'.format(filter2)] < crowd)
+
+    df = df.assign(flag=index.values)
 
     print('Saving ...')
 
