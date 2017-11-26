@@ -100,7 +100,7 @@ if __name__ == "__main__":
                 df = df.append(item.append(data_series), ignore_index=True)
         return df
 
-    pool = Pool(30)
+    pool = Pool(20)
     result = pool.map(inner_extract, output_names)
     pool.close()
 
@@ -121,7 +121,6 @@ if __name__ == "__main__":
 
     print('Saving ...')
 
-    t = Table.from_pandas(df)
-    t.write('f.{0}.fits'.format(folder), overwrite=True)
+    df.to_pickle('f.{0}.pickle'.format(folder))
 
-    subprocess.call('mv f.{0}.fits final'.format(folder), shell=True)
+    subprocess.call('mv f.{0}.pickle final'.format(folder), shell=True)
