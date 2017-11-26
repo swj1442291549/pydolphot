@@ -10,6 +10,7 @@ import pickle
 import pandas as pd
 from tqdm import tqdm
 from multiprocessing import Pool
+from astropy.table import Table
 
 
 def read_data(data_name, w):
