@@ -40,7 +40,7 @@ if __name__ == "__main__":
     parser.add_argument(
         '-f', "--folder", default='fake', help='Output folder name (fake)')
     parser.add_argument(
-        '-n', '--num', type=int, default=100, help='Number of fake stars (100)')
+        '-n', '--num', type=int, default=100, help='Number of fake stars (default)')
     args = parser.parse_args()
     folder = args.folder
     filter1 = args.Bfilter
@@ -99,10 +99,9 @@ if __name__ == "__main__":
                 df = df.append(item.append(data_series), ignore_index=True)
         return df
 
-    with Pool(30) as p:
-        with tqdm(total=len(output_names)) as pbar:
-            for i, _ in tqdm(enumerate(p.imap_unordered(inner_extract, output_names))):
-                pbar.update()
+    pool = Pool(30)
+    result = pool.map(inner_extract, output_names)
+    pool.close()
 
     df = pd.concat(result)
     df.reset_index(drop=True, inplace=True)
