@@ -34,6 +34,13 @@ def read_pickle(file_name, filter1, filter2):
     return df
 
 
+def add_coordinate(df, w):
+    world = w.wcs_pix2world(df['X'], df['Y'], 1)
+    df = df.assign(RA=world[0])
+    df = df.assign(DEC=world[1])
+    return df
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("Bfilter", help='Blue Filter name')
@@ -55,6 +62,8 @@ if __name__ == "__main__":
     w = wcs.WCS(hdu_list[1].header)
 
     df = read_pickle(file_name, filter1, filter2)
+    df = add_coordinate(df, w)
+
     df_dict = {1: df[df['chip'] == 1], 2: df[df['chip'] == 2]}
 
     print('Extracting ...')
