@@ -60,6 +60,7 @@ if __name__ == "__main__":
                 subprocess.call('rm -rf {0}'.format(folder), shell=True)
                 subprocess.call('mkdir {0}'.format(folder), shell=True)
         else:
+            print("{0} is not found. Create a new one.".format(folder))
             subprocess.call('mkdir {0}'.format(folder), shell=True)
             is_cal = 'y'
 
