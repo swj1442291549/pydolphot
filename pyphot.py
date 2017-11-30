@@ -93,12 +93,13 @@ if __name__ == "__main__":
     wgood_list = list()
     for i in range(nfilters):
         wgood = np.where(
-            (t[filters[0] + '_SNR'] >= snr) &
-            (t[filters[0] + '_SHARP']**2 <
-             sharp) & (t[filters[0] + '_CROWD'] < crowd) & (t['OBJECT_TYPE'] == objtype) &
-            (t[filters[0] + '_FLAG'] <= flag) )
+            (t[filters[i] + '_SNR'] >= snr) &
+            (t[filters[i] + '_SHARP']**2 <
+             sharp) & (t[filters[i] + '_CROWD'] < crowd) & (t['OBJECT_TYPE'] == objtype) &
+            (t[filters[i] + '_FLAG'] <= flag) )
         wgood_list.append(wgood[0])
-    wgood_index = list(Counter(np.concatenate(wgood_list)).keys())
+    cnt = Counter(np.concatenate(wgood_list))
+    wgood_index = [k for k, v in cnt.items() if v > 2]
 
     t1 = t[wgood_index]
     t1.write('o.gst.fits', overwrite=True)
