@@ -4,6 +4,7 @@ import astropy.table
 from astropy import units as u
 from astropy.io import fits
 from astropy import wcs
+from collections import Counter
 import argparse
 import subprocess
 import os
@@ -89,7 +90,17 @@ if __name__ == "__main__":
         (t[filters[1] + '_CROWD'] < crowd) & (t['OBJECT_TYPE'] == objtype) &
         (t[filters[0] + '_FLAG'] <= flag) & (t[filters[1] + '_FLAG'] <= flag))
 
-    t1 = t[wgood]
+    wgood_list = list()
+    for i in range(nfilters):
+        wgood = np.where(
+            (t[filters[0] + '_SNR'] >= snr) &
+            (t[filters[0] + '_SHARP']**2 <
+             sharp) & (t[filters[0] + '_CROWD'] < crowd) & (t['OBJECT_TYPE'] == objtype) &
+            (t[filters[0] + '_FLAG'] <= flag) )
+        wgood_list.append(wgood[0])
+    wgood_index = list(Counter(np.concatenate(wgood_list)).keys())
+
+    t1 = t[wgood_index]
     t1.write('o.gst.fits', overwrite=True)
 
     if not os.path.isdir("final"):
