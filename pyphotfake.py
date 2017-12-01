@@ -129,6 +129,8 @@ if __name__ == "__main__":
 
     print('Saving ...')
 
-    df.to_pickle('f.{0}.pickle'.format(folder))
+    t = Table.from_pandas(df)
+    t.write('final/f.{0}.fits'.format(folder), overwrite=True)
 
-    subprocess.call('mv f.{0}.pickle final'.format(folder), shell=True)
+    # df.to_pickle('f.{0}.pickle'.format(folder))
+    # subprocess.call('mv f.{0}.pickle final'.format(folder), shell=True)
