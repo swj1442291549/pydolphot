@@ -4,21 +4,15 @@ import astropy.table
 from astropy import units as u
 from astropy.io import fits
 from astropy import wcs
+import pandas as pd
 from collections import Counter
-import argparse
 import subprocess
 import os
 import glob
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("filter", help='Filter name (max 2)')
-
-    args = parser.parse_args()
-    filter = args.filter
-
     refname = glob.glob('*drz.fits')[0]
-    
+
     data_1_name = 'output1'
     data_2_name = 'output2'
 
@@ -28,8 +22,20 @@ if __name__ == "__main__":
     ]
     formats = ['f8', 'f8', 'f8', 'f8', 'f8', 'f8', 'f8']
 
-    filters = filter.split()
+    # read filters from output1.columns
+    df_column = pd.read_table('output1.columns', names=['column'])
+    filters = []
+    for i in range(int((len(df_column) - 11) / 13)):
+        column = df_column.iloc[11 + 13 * i]['column']
+        if '(' in column:
+            column_filter = column.split('F')[1].split(',')[0]  # ACS
+        else:
+            column_filter = column.split(',')[1].strip()  # WFC3
+        if column_filter not in filters:
+            filters.append(column_filter)
+
     nfilters = len(filters)
+
     hdu_list = fits.open(refname)
     w = wcs.WCS(hdu_list[1].header)
 
@@ -38,7 +44,6 @@ if __name__ == "__main__":
     print('Loaded {0} objects'.format(len(data_1)))
     num_1 = np.arange(len(data_1[:, 0])) + 1
     world_1 = w.wcs_pix2world(data_1[:, 2], data_1[:, 3], 1)
-
 
     print('Loading raw DOLPHOT file for chip2...')
     data_2 = np.loadtxt(data_2_name)
@@ -55,8 +60,7 @@ if __name__ == "__main__":
     t = astropy.table.Table()
     t.add_column(astropy.table.Column(name=global_labels[0],
                                       data=num))  # star number
-    t.add_column(astropy.table.Column(name='chip',
-                                      data=chip))  # chip number
+    t.add_column(astropy.table.Column(name='chip', data=chip))  # chip number
     t.add_column(astropy.table.Column(name=global_labels[1], data=ra))  # RA
     t.add_column(astropy.table.Column(name=global_labels[2], data=dec))  # DEC
     t.add_column(astropy.table.Column(name=global_labels[3],
@@ -84,22 +88,21 @@ if __name__ == "__main__":
 
     wgood = np.where(
         (t[filters[0] + '_SNR'] >= snr) & (t[filters[1] + '_SNR'] >= snr) &
-        (t[filters[0] + '_SHARP']**2 <
-         sharp) & (t[filters[1] + '_SHARP']**2 <
-                   sharp) & (t[filters[0] + '_CROWD'] < crowd) &
-        (t[filters[1] + '_CROWD'] < crowd) & (t['OBJECT_TYPE'] == objtype) &
+        (t[filters[0] + '_SHARP']**2 < sharp) &
+        (t[filters[1] + '_SHARP']**2 < sharp) &
+        (t[filters[0] + '_CROWD'] < crowd) & (
+            t[filters[1] + '_CROWD'] < crowd) & (t['OBJECT_TYPE'] == objtype) &
         (t[filters[0] + '_FLAG'] <= flag) & (t[filters[1] + '_FLAG'] <= flag))
 
     wgood_list = list()
     for i in range(nfilters):
-        wgood = np.where(
-            (t[filters[i] + '_SNR'] >= snr) &
-            (t[filters[i] + '_SHARP']**2 <
-             sharp) & (t[filters[i] + '_CROWD'] < crowd) & (t['OBJECT_TYPE'] == objtype) &
-            (t[filters[i] + '_FLAG'] <= flag) )
+        wgood = np.where((t[filters[i] + '_SNR'] >= snr) & (
+            t[filters[i] + '_SHARP']**2 < sharp
+        ) & (t[filters[i] + '_CROWD'] < crowd) & (t['OBJECT_TYPE'] == objtype) &
+                         (t[filters[i] + '_FLAG'] <= flag))
         wgood_list.append(wgood[0])
     cnt = Counter(np.concatenate(wgood_list))
-    wgood_index = [k for k, v in cnt.items() if v > 2]
+    wgood_index = [k for k, v in cnt.items() if v >= nfilters]
 
     t1 = t[wgood_index]
     t1.write('o.gst.fits', overwrite=True)
