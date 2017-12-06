@@ -1,5 +1,5 @@
 # pydolphot
-pydolphot inspired by dweisz
+pydolphot inspired by [dweisz](https://github.com/dweisz/pydolphot)
 
 ## Instruction
 
