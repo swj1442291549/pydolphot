@@ -20,12 +20,13 @@ mv -f stdatu.stsci.edu/stage/anonymous/anonymous90320 raw
 rm -rf stdatu.stsci.edu
 ```
 
-If it's the first time, remember to setup `dol` variable to the location of this repository on your computer. Here I show an example using `bash`
+If it's the first time you use the code, remember to setup `dol` variable to the location of this repository on your computer. Here I show an example using `bash`
 ```bash
 export dol="/data/Github/pydolphot"
 ```
 
 ### Run the dolphot
+`dol.py` combine all the procedures into one file
 ```bash
 python $dol/dol.py
 ```
@@ -36,7 +37,7 @@ After the previous command finishes, we need to combine the `output1` and `outpu
 ```bash
 python $dol/phot.py
 ```
-It will read the filter from `output1.columns` and save the result into `o.summary.fits` in folder `final`.
+It will read the filters from `output1.columns` and save the result into `o.summary.fits` in folder `final`.
 
 In the meantime, it will also made a selection on signal-to-noise ratio, sharpness, crowdness and object type. The corresponding result is saved in `o.gst.fits`.
 
@@ -51,13 +52,14 @@ The following command run fake stars for `fake.pickle` in filters `F475W` and `F
 ```bash
 python $dol/fake.py F475W F814W -f fake -n 100
 ```
+During the fake star test, a folder named after the pickle file will be created and store all the middle files. Be sure not to delete it before you run `photfake.py` command. Please don't name the pickle as `final.pickle`, which would leave a lot of trash in foler `final`.
 
 `photfake.py` is used to generate the result from fake star tests. The parameters should keep the same as `fake.py`
 ```bash
 python $dol/photfake.py F475W F814W -f fake -n 100
 ```
 
-Both `fake.py` and `photfake.py` utilize multiple core to accerelate the calculation. You may want to change the size of pool depending on the condition of your computer.
+Both `fake.py` and `photfake.py` utilize multiple cores to accerelate the calculation. You may want to change the size of pool depending on the condition of your computer.
 
 
 
