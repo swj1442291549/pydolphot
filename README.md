@@ -1,5 +1,5 @@
 # pydolphot
-pydolphot inspired by [dweisz](https://github.com/dweisz/pydolphot)
+pydolphot inspired by [dweisz](https://github.com/dweisz/pydolphot).
 
 ## Instruction
 
@@ -44,7 +44,7 @@ In the meantime, it will also made a selection on signal-to-noise ratio, sharpne
 If you want to know more about the selection creteria, please refer to [dolphot](https://github.com/dstndstn/dolphot) for more information. And if you change the creteria here, remember to make the same change in `photfake.py`.
 
 ### Fask star test
-`fake.py` accept a pickle file as the main input (default file name: `fake.pickle`, `.pickle` is not required as part of the input). The pickle is composed of 5 columns: `chip`, `X`, `Y` and two filters. The filter name should end with `_VEGA`. A sample filter name looks like `F475W_VEGA` or `F814W_VEGA`. 
+`fake.py` accepts a pickle file as the main input (default file name: `fake.pickle`, `.pickle` is not required as part of the input). The pickle is composed of 5 columns: `chip`, `X`, `Y` and two filters. The filter name should end with `_VEGA`. A sample filter name looks like `F475W_VEGA` or `F814W_VEGA`. 
 
 Right now, the filters name has to be given explicitly in the order from blue to red. Another additional parameter is the number of fake stars each run. The default value is 100.
 
@@ -58,6 +58,7 @@ During the fake star test, a folder named after the pickle file will be created 
 ```bash
 python $dol/photfake.py F475W F814W -f fake -n 100
 ```
+The output files will be saved as `f.fake.fits` (the middle part is the same as pickle file name) in folder `final`
 
 Both `fake.py` and `photfake.py` utilize multiple cores to accerelate the calculation. You may want to change the size of pool depending on the condition of your computer.
 
