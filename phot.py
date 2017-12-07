@@ -28,7 +28,7 @@ if __name__ == "__main__":
     for i in range(int((len(df_column) - 11) / 13)):
         column = df_column.iloc[11 + 13 * i]['column']
         if '(' in column:
-            column_filter = column.split('F')[1].split(',')[0]  # ACS
+            column_filter = column.split('(')[1].split(',')[0]  # ACS
         else:
             column_filter = column.split(',')[1].strip()  # WFC3
         if column_filter not in filters:
