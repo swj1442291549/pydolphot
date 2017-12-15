@@ -3,6 +3,7 @@ import os
 import pandas as pd
 import numpy as np
 from astropy.io import fits
+from astropy.table import Table
 import argparse
 import glob
 import random
@@ -30,26 +31,22 @@ def generate_fake_param(chip_num, folder):
         f.write("FakeMatch=3.0\n")
 
 
-def read_pickle(file_name):
-    df = pickle.load(open(file_name, 'rb'))
+def read_fits(file_name):
+    df = Table.read(file_name).to_pandas()
     df = df.sort_values(by=['X'])
     return df
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("Bfilter", help='Blue Filter name (first)')
-    parser.add_argument("Rfilter", help='Red Filter name (second)')
     parser.add_argument(
-        "-f", '--folder', default='fake', help='Output folder name (fake)')
+        "-f", '--folder', default='complete', help='Output folder name (complete)')
     parser.add_argument(
         '-n', '--num', type=int, default=100, help='Number of fake stars (100)')
     args = parser.parse_args()
     folder = args.folder
-    filter1 = args.Bfilter
-    filter2 = args.Rfilter
     num_step = args.num
-    file_name = '{0}.pickle'.format(folder)
+    file_name = '{0}.fits'.format(folder)
 
     if not os.path.exists(file_name):
         print('No {0} is found. Make sure the directory is correct.'.format(file_name))
@@ -66,7 +63,16 @@ if __name__ == "__main__":
 
         if is_cal == 'y':
             print('Reading ...')
-            df = read_pickle(file_name)
+            df = read_fits(file_name)
+
+            filters = []
+            for key in df.keys():
+                if '_VEGA' in key:
+                    filters.append(key.replace('_VEGA', ''))
+
+            if int(filters[1][1:-1]) > int(filters[0][1:-1]):
+                filter1 = filters[0]
+                filter2 = filters[1]
 
             df1 = df[df['chip'] == 1]
             df2 = df[df['chip'] == 2]
