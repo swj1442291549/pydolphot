@@ -24,14 +24,22 @@ def read_data(data_name, w):
     return {'ra': ra, 'dec': dec, 'data': data, 'chip': chip}
 
 
-def read_pickle(file_name, filter1, filter2):
-    df = pickle.load(open(file_name, 'rb'))
+def read_fits(file_name):
+    df = Table.read(file_name).to_pandas()
     df = df.sort_values(by=['X'])
-    f1_index = list(df.columns).index('{0}_VEGA'.format(filter1))
-    f2_index = list(df.columns).index('{0}_VEGA'.format(filter2))
-    df.columns.values[f1_index] = '{0}_VEGA_IN'.format(filter1)
-    df.columns.values[f2_index] = '{0}_VEGA_IN'.format(filter2)
     return df
+
+
+def get_filters(df):
+    filters = []
+    for key in df.keys():
+        if '_VEGA' in key:
+            filters.append(key.replace('_VEGA', ''))
+
+    if int(filters[1][1:-1]) > int(filters[0][1:-1]):
+        filter1 = filters[0]
+        filter2 = filters[1]
+    return filter1, filter2
 
 
 def add_coordinate(df, w):
@@ -43,25 +51,39 @@ def add_coordinate(df, w):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("Bfilter", help='Blue Filter name')
-    parser.add_argument("Rfilter", help='Red Filter name')
+    # parser.add_argument("Bfilter", help='Blue Filter name')
+    # parser.add_argument("Rfilter", help='Red Filter name')
     parser.add_argument(
-        '-f', "--folder", default='fake', help='Output folder name (fake)')
+        '-f',
+        "--folder",
+        default='complete',
+        help='Output folder name (complete)')
     parser.add_argument(
-        '-n', '--num', type=int, default=100, help='Number of fake stars (default)')
+        '-n',
+        '--num',
+        type=int,
+        default=100,
+        help='Number of fake stars (default)')
     args = parser.parse_args()
     folder = args.folder
-    filter1 = args.Bfilter
-    filter2 = args.Rfilter
+    # filter1 = args.Bfilter
+    # filter2 = args.Rfilter
     num_step = args.num
-    file_name = '{0}.pickle'.format(folder)
+    file_name = '{0}.fits'.format(folder)
 
     print('Reading ...')
     refname = glob.glob('*drz.fits')[0]
     hdu_list = fits.open(refname)
     w = wcs.WCS(hdu_list[1].header)
 
-    df = read_pickle(file_name, filter1, filter2)
+    df = read_fits(file_name)
+    filter1, filter2 = get_filters(df)
+
+    f1_index = list(df.columns).index('{0}_VEGA'.format(filter1))
+    f2_index = list(df.columns).index('{0}_VEGA'.format(filter2))
+    df.columns.values[f1_index] = '{0}_VEGA_IN'.format(filter1)
+    df.columns.values[f2_index] = '{0}_VEGA_IN'.format(filter2)
+
     df = add_coordinate(df, w)
 
     df_dict = {1: df[df['chip'] == 1], 2: df[df['chip'] == 2]}
@@ -123,7 +145,11 @@ if __name__ == "__main__":
     crowd = 0.5
     flag = np.zeros(len(df))
 
-    index = (df['{0}_SNR'.format(filter1)] > snr) & (df['{0}_SNR'.format(filter2)] > snr) & (df['{0}_SHARP'.format(filter1)] ** 2 < sharp) & (df['{0}_SHARP'.format(filter2)] ** 2 < sharp) & (df['{0}_CROWD'.format(filter1)] < crowd) & (df['{0}_CROWD'.format(filter2)] < crowd)
+    index = (df['{0}_SNR'.format(filter1)] > snr) & (df['{0}_SNR'.format(
+        filter2)] > snr) & (df['{0}_SHARP'.format(filter1)]**2 < sharp) & (
+            df['{0}_SHARP'.format(filter2)]**2 <
+            sharp) & (df['{0}_CROWD'.format(filter1)] <
+                      crowd) & (df['{0}_CROWD'.format(filter2)] < crowd)
 
     df = df.assign(flag=index.values)
 
@@ -131,6 +157,3 @@ if __name__ == "__main__":
 
     t = Table.from_pandas(df)
     t.write('final/f.{0}.fits'.format(folder), overwrite=True)
-
-    # df.to_pickle('f.{0}.pickle'.format(folder))
-    # subprocess.call('mv f.{0}.pickle final'.format(folder), shell=True)

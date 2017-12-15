@@ -37,10 +37,25 @@ def read_fits(file_name):
     return df
 
 
+def get_filters(df):
+    filters = []
+    for key in df.keys():
+        if '_VEGA' in key:
+            filters.append(key.replace('_VEGA', ''))
+
+    if int(filters[1][1:-1]) > int(filters[0][1:-1]):
+        filter1 = filters[0]
+        filter2 = filters[1]
+    return filter1, filter2
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "-f", '--folder', default='complete', help='Output folder name (complete)')
+        "-f",
+        '--folder',
+        default='complete',
+        help='Output folder name (complete)')
     parser.add_argument(
         '-n', '--num', type=int, default=100, help='Number of fake stars (100)')
     args = parser.parse_args()
@@ -49,10 +64,13 @@ if __name__ == "__main__":
     file_name = '{0}.fits'.format(folder)
 
     if not os.path.exists(file_name):
-        print('No {0} is found. Make sure the directory is correct.'.format(file_name))
+        print('No {0} is found. Make sure the directory is correct.'.format(
+            file_name))
     else:
         if os.path.isdir(folder):
-            is_cal = input('Folder {0} already exists. Are you sure to remove it? (y/n) '.format(folder))
+            is_cal = input(
+                'Folder {0} already exists. Are you sure to remove it? (y/n) '.
+                format(folder))
             if is_cal == 'y':
                 subprocess.call('rm -rf {0}'.format(folder), shell=True)
                 subprocess.call('mkdir {0}'.format(folder), shell=True)
@@ -64,15 +82,7 @@ if __name__ == "__main__":
         if is_cal == 'y':
             print('Reading ...')
             df = read_fits(file_name)
-
-            filters = []
-            for key in df.keys():
-                if '_VEGA' in key:
-                    filters.append(key.replace('_VEGA', ''))
-
-            if int(filters[1][1:-1]) > int(filters[0][1:-1]):
-                filter1 = filters[0]
-                filter2 = filters[1]
+            filter1, filter2 = get_filters(df)
 
             df1 = df[df['chip'] == 1]
             df2 = df[df['chip'] == 2]
@@ -93,12 +103,25 @@ if __name__ == "__main__":
 
             print('Running ...')
             output_names = glob.glob('{0}/fake*'.format(folder))
+
             def inner_dolphot(output_name):
                 chip_num = int(output_name.split('list')[0][-2])
                 index = int(output_name.split('list')[1])
-                subprocess.call(['dolphot', 'output{0}'.format(chip_num), '-pphot{0}.{1}.param'.format(chip_num, folder), 'FakeStars={0}/fake{1}.list{2:0>4}'.format(folder, chip_num, index), 'FakeOut={0}/output{1}.fake{2:0>4}'.format(folder, chip_num, index)], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                subprocess.call(
+                    [
+                        'dolphot', 'output{0}'.format(chip_num),
+                        '-pphot{0}.{1}.param'.format(chip_num, folder),
+                        'FakeStars={0}/fake{1}.list{2:0>4}'.format(
+                            folder, chip_num,
+                            index), 'FakeOut={0}/output{1}.fake{2:0>4}'.format(
+                                folder, chip_num, index)
+                    ],
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE)
 
             with Pool(30) as p:
                 with tqdm(total=len(output_names)) as pbar:
-                    for i, _ in tqdm(enumerate(p.imap_unordered(inner_dolphot, output_names))):
+                    for i, _ in tqdm(
+                            enumerate(
+                                p.imap_unordered(inner_dolphot, output_names))):
                         pbar.update()
