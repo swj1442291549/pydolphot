@@ -13,24 +13,29 @@ from multiprocessing import Pool
 from astropy.table import Table
 
 
-def read_data(data_name, w):
-    data = np.loadtxt(data_name)
-    num = np.arange(len(data[:, 0])) + 1
-    world = w.wcs_pix2world(data[:, 2], data[:, 3], 1)
-    ra = world[0]
-    dec = world[1]
-    chip_num = int(data_name.split('.')[0][-1])
-    chip = np.array([chip_num] * len(num))
-    return {'ra': ra, 'dec': dec, 'data': data, 'chip': chip}
-
-
 def read_fits(file_name):
+    """Read fits and sort by X
+    
+    Args:
+        file_name (string): file name
+
+    Returns:
+        df (DataFrame): data frame
+    """
     df = Table.read(file_name).to_pandas()
     df = df.sort_values(by=['X'])
     return df
 
 
 def get_filters(df):
+    """Get filters name
+    
+    Args:
+        df (DataFrame): dataframe
+
+    Returns:
+        filter1, filter2 (string): filter1 and filter2 name
+    """
     filters = []
     for key in df.keys():
         if '_VEGA' in key:
@@ -43,6 +48,12 @@ def get_filters(df):
 
 
 def add_coordinate(df, w):
+    """Add coordinate X and Y
+    
+    Args:
+        df (DataFrame): data frame
+        w (wcs): wcs
+    """
     world = w.wcs_pix2world(df['X'], df['Y'], 1)
     df = df.assign(RA=world[0])
     df = df.assign(DEC=world[1])
@@ -51,8 +62,6 @@ def add_coordinate(df, w):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    # parser.add_argument("Bfilter", help='Blue Filter name')
-    # parser.add_argument("Rfilter", help='Red Filter name')
     parser.add_argument(
         '-f',
         "--folder",
@@ -66,8 +75,6 @@ if __name__ == "__main__":
         help='Number of fake stars (default)')
     args = parser.parse_args()
     folder = args.folder
-    # filter1 = args.Bfilter
-    # filter2 = args.Rfilter
     num_step = args.num
     file_name = '{0}.fits'.format(folder)
 

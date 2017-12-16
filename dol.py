@@ -9,6 +9,15 @@ from multiprocessing import Pool
 
 
 def extract_ref(rawdir='raw/'):
+    """Read drz files from rawdir
+    
+    Args:
+        rawdir (string): raw folder
+                         (raw/)
+
+    Returns:
+        filename (string): drz filename
+    """
     ref_files = sorted(glob.glob("{0}/*drz.fits".format(rawdir)))
     filenames = [j.replace(rawdir, "") for j in ref_files]
     for i, j in enumerate(filenames):
@@ -22,6 +31,16 @@ def extract_ref(rawdir='raw/'):
 
 
 def gen_frame(ref_file, rawdir='raw/'):
+    """Generating the data frame
+    
+    Args:
+        ref_file (string): drz filename
+        rawdir (stinrg): raw folder
+                         (raw/)
+
+    Returns:
+        df (DataFrmae): data
+    """
     print('Reading ...')
     rawfiles = sorted(glob.glob(rawdir + '/*fits*'))
     if not rawfiles:
@@ -62,6 +81,14 @@ def gen_frame(ref_file, rawdir='raw/'):
 
 
 def wfc3_info(filename):
+    """get info for WFC3 instrument
+    
+    Args:
+        filename (string): file name
+
+    Returns:
+        dict (dictionary): filter and detector
+    """
     hdu_list = fits.open(filename)
     filter = hdu_list[0].header['filter']
     detector = hdu_list[0].header['DETECTOR']
@@ -69,6 +96,14 @@ def wfc3_info(filename):
 
 
 def acs_info(filename):
+    """get info for ACS instrument
+    
+    Args:
+        filename (string): file name
+
+    Returns:
+        dict (dictionary): filter and detector
+    """
     hdu_list = fits.open(filename)
     f1 = hdu_list[0].header['filter1']
     f2 = hdu_list[0].header['filter2']
@@ -80,6 +115,13 @@ def acs_info(filename):
 
 
 def load_files(df, rawdir='raw/'):
+    """Clean and load the data
+    
+    Args:
+        df (DataFrame): data frame
+        rawdir (string): raw folder
+                         (raw/)
+    """
     subprocess.call("rm -rf *.fits phot[0-9].log phot[0-9].param", shell=True)
     for i in range(len(df)):
         subprocess.call(
@@ -89,6 +131,12 @@ def load_files(df, rawdir='raw/'):
 
 
 def mask_files(df):
+    """Make the files
+    
+    Args:
+        df (DataFrame): data frame
+        
+    """
     print('Masking ...')
     for i in range(len(df)):
         if df.iloc[i]['inst'] == 'WFC3':
@@ -101,6 +149,12 @@ def mask_files(df):
 
 
 def split_files(df):
+    """split the files
+    
+    Args:
+        df (DataFrame): data frame
+        
+    """
     print('Splitting ...')
     for i in range(len(df)):
         subprocess.call(
@@ -108,6 +162,12 @@ def split_files(df):
 
 
 def calsky_files(df):
+    """calsky the files
+    
+    Args:
+        df (DataFrame): data frame
+        
+    """
     print('Calculating sky ...')
     for i in range(len(df)):
         if df.iloc[i]['inst'] == 'WFC3':
@@ -117,6 +177,11 @@ def calsky_files(df):
 
 
 def wfc3_calsky(item):
+    """Calsky parameter for WFC3
+    
+    Args:
+        item (item): item
+    """
     if item['type'] == 'reference':
         if item['detect'] == 'UVIS':
             subprocess.call(
@@ -150,6 +215,11 @@ def wfc3_calsky(item):
 
 
 def acs_calsky(item):
+    """Calsky parameter for ACS
+    
+    Args:
+        item (item): item
+    """
     if item['type'] == 'reference':
         subprocess.call(
             "calcsky " + item['img_name'].replace('.fits', '.chip1') +
@@ -167,6 +237,11 @@ def acs_calsky(item):
 
 
 def param_files(df):
+    """Generate parameter files
+    
+    Args:
+        df (DataFrame): data frame
+    """
     acs_params = {
         'raper': '4',
         'rchi': '2.0',

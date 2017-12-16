@@ -13,6 +13,16 @@ from tqdm import tqdm
 
 
 def generate_fakelist(df, chip_num, fake_num, filter1, filter2, folder):
+    """Generate the fakelist
+    
+    Args:
+        df (DataFrame): data
+        chip_num (int): chip 1 or 2
+        fake_num (int): fake index
+        filter1 (string): filter1
+        filter2 (string): filter2
+        folder (string): output folder
+    """
     with open('{0}/fake{1}.list{2:0>4}'.format(folder, chip_num, fake_num),
               'w') as f:
         for i in range(len(df)):
@@ -23,6 +33,12 @@ def generate_fakelist(df, chip_num, fake_num, filter1, filter2, folder):
 
 
 def generate_fake_param(chip_num, folder):
+    """Generate parameter file for fake star
+    
+    Args:
+        chip_num (int): chip number 1 or 2
+        folder (string): output folder
+    """
     subprocess.call(
         'cp phot{0}.param phot{0}.{1}.param'.format(chip_num, folder),
         shell=True)
@@ -32,12 +48,28 @@ def generate_fake_param(chip_num, folder):
 
 
 def read_fits(file_name):
+    """Read fits and sort by X
+    
+    Args:
+        file_name (string): file name
+
+    Returns:
+        df (DataFrame): data frame
+    """
     df = Table.read(file_name).to_pandas()
     df = df.sort_values(by=['X'])
     return df
 
 
 def get_filters(df):
+    """Get filters name
+    
+    Args:
+        df (DataFrame): dataframe
+
+    Returns:
+        filter1, filter2 (string): filter1 and filter2 name
+    """
     filters = []
     for key in df.keys():
         if '_VEGA' in key:
