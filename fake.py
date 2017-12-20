@@ -91,18 +91,21 @@ if __name__ == "__main__":
     parser.add_argument(
         '-n', '--num', type=int, default=100, help='Number of fake stars (100)')
     parser.add_argument(
-        '-c', '--core', type=int, default=30, help='Number of fake stars (100)')
+        '-c', '--core', type=int, default=30, help='Number of core (30)')
+    parser.add_argument(
+        '-f', '--force', action='store_true', help='Force (False)')
     args = parser.parse_args()
     folder = args.folder
     num_step = args.num
     core = args.core
+    force = args.force
     file_name = '{0}.fits'.format(folder)
 
     if not os.path.exists(file_name):
         print('No {0} is found. Make sure the directory is correct.'.format(
             file_name))
     else:
-        if os.path.isdir(folder):
+        if os.path.isdir(folder) and force == False:
             is_cal = input(
                 'Folder {0} already exists. Are you sure to remove it? (y/n) '.
                 format(folder))
