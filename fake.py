@@ -92,8 +92,7 @@ if __name__ == "__main__":
         '-n', '--num', type=int, default=100, help='Number of fake stars (100)')
     parser.add_argument(
         '-c', '--core', type=int, default=30, help='Number of core (30)')
-    parser.add_argument(
-        '-f', '--force', action='store_true', help='Force (False)')
+    parser.add_argument('--force', action='store_true', help='Force (False)')
     args = parser.parse_args()
     folder = args.folder
     num_step = args.num
@@ -105,17 +104,22 @@ if __name__ == "__main__":
         print('No {0} is found. Make sure the directory is correct.'.format(
             file_name))
     else:
-        if os.path.isdir(folder) and force == False:
-            is_cal = input(
-                'Folder {0} already exists. Are you sure to remove it? (y/n) '.
-                format(folder))
-            if is_cal == 'y':
-                subprocess.call('rm -rf {0}'.format(folder), shell=True)
-                subprocess.call('mkdir {0}'.format(folder), shell=True)
-        else:
-            print("{0} is not found. Create a new one.".format(folder))
+        if force == True:
+            subprocess.call('rm -rf {0}'.format(folder), shell=True)
             subprocess.call('mkdir {0}'.format(folder), shell=True)
             is_cal = 'y'
+        else:
+            if os.path.isdir(folder):
+                is_cal = input(
+                    'Folder {0} already exists. Are you sure to remove it? (y/n) '.
+                    format(folder))
+                if is_cal == 'y':
+                    subprocess.call('rm -rf {0}'.format(folder), shell=True)
+                    subprocess.call('mkdir {0}'.format(folder), shell=True)
+            else:
+                print("{0} is not found. Create a new one.".format(folder))
+                subprocess.call('mkdir {0}'.format(folder), shell=True)
+                is_cal = 'y'
 
         if is_cal == 'y':
             print('Reading ...')
