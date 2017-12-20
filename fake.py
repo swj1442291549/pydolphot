@@ -90,9 +90,12 @@ if __name__ == "__main__":
         help='Output folder name (complete)')
     parser.add_argument(
         '-n', '--num', type=int, default=100, help='Number of fake stars (100)')
+    parser.add_argument(
+        '-c', '--core', type=int, default=30, help='Number of fake stars (100)')
     args = parser.parse_args()
     folder = args.folder
     num_step = args.num
+    core = args.core
     file_name = '{0}.fits'.format(folder)
 
     if not os.path.exists(file_name):
@@ -151,7 +154,7 @@ if __name__ == "__main__":
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE)
 
-            with Pool(30) as p:
+            with Pool(core) as p:
                 with tqdm(total=len(output_names)) as pbar:
                     for i, _ in tqdm(
                             enumerate(
