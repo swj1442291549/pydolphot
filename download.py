@@ -14,7 +14,7 @@ if __name__ == '__main__':
 
     for filename in files:
         print('Downloading {0} / {1} ...'.format(files.index(filename), len(files)))
-        subprocess.call("axel -a ftp://stdatu.stsci.edu/stage/anonymous/anonymous{0}/{1}".format(index, filename), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        subprocess.call("axel -a -n 20 ftp://stdatu.stsci.edu/stage/anonymous/anonymous{0}/{1}".format(index, filename), shell=True)
 
     subprocess.call('mkdir raw', shell=True)
     subprocess.call('mv *.fits raw', shell=True)
