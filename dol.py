@@ -6,6 +6,7 @@ import subprocess
 from astropy.io import fits
 import pandas as pd
 from multiprocessing import Pool
+from pathlib import Path
 
 
 def extract_ref(rawdir='raw/'):
@@ -374,9 +375,31 @@ def param_files(df):
             f.write(i + '=' + np.str(dolphot_params[i]) + "\n")
 
 
+def prepare_dir():
+    """Prepare the directory
+    
+    Check the existence of raw. If not, move STScI into raw.
+    """
+    rawdir = Path('raw/')
+    if rawdir.is_dir():
+        print('Find raw directory.')
+    else:
+        print('No raw directory is found.')
+        if Path('stdatu.stsci.edu').is_dir():
+            print('Find STScI directory.')
+            ano_dir = glob.glob('stdatu.stsci.edu/stage/anonymous/anonymous*')
+            if len(ano_dir) != 1:
+                print('Wring anonymous folder!')
+            else:
+                subprocess.call('mv -f {0} raw'.format(ano_dir[0]), shell=True)
+                subprocess.call('rm -rf stdatu.stsci.edu', shell=True)
+                print("Complete directory preperation")
+
+
 if __name__ == "__main__":
+    prepare_dir()
     ref_file = extract_ref()
-    df = gen_frame(ref_file)
+    df = gen_fame(ref_file)
     load_files(df)
     mask_files(df)
     split_files(df)
