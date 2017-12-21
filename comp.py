@@ -36,7 +36,7 @@ def get_data(file_name):
 
 
 def generate_complete(df, filter1, filter2, point_num, duplicate):
-    mag_bin = histogram_equal(df['{0}_VEGA'.format(filter1)], point_num + 1)
+    mag_bin = histogram_equal(df['{0}_VEGA'.format(filter1)], point_num)
     f1_list = list()
     f2_list = list()
     for i in range(point_num):
@@ -118,10 +118,16 @@ def get_filters(df):
         filter2 = filter_list[int(index_2)][:-5]
     return filter1, filter2
 
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '-d', '--dup', type=int, default=3000, help='Number of duplicate (3000)')
+        '-d',
+        '--dup',
+        type=int,
+        default=3000,
+        help='Number of duplicate (3000)')
     parser.add_argument(
         '-n', '--num', type=int, default=20, help='Number of points (20)')
     args = parser.parse_args()
