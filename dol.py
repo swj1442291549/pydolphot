@@ -399,7 +399,7 @@ def prepare_dir():
 if __name__ == "__main__":
     prepare_dir()
     ref_file = extract_ref()
-    df = gen_fame(ref_file)
+    df = gen_frame(ref_file)
     load_files(df)
     mask_files(df)
     split_files(df)
