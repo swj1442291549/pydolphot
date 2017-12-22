@@ -7,12 +7,14 @@ from astropy.io import fits
 import pandas as pd
 from multiprocessing import Pool
 from pathlib import Path
+import argparse
 
 
-def extract_ref(rawdir='raw/'):
+def extract_ref(force, rawdir='raw/'):
     """Read drz files from rawdir
     
     Args:
+        force (boolean): force execute 
         rawdir (string): raw folder
                          (raw/)
 
@@ -21,13 +23,16 @@ def extract_ref(rawdir='raw/'):
     """
     ref_files = sorted(glob.glob("{0}/*drz.fits".format(rawdir)))
     filenames = [j.replace(rawdir, "") for j in ref_files]
-    for i, j in enumerate(filenames):
-        print("{0}: {1}".format(i, j))
-    index = input('Use which drz file as the reference: ')
-    if index.isdigit():
-        index = int(index)
+    if not force:
+        for i, j in enumerate(filenames):
+            print("{0}: {1}".format(i, j))
+        index = input('Use which drz file as the reference: ')
+        if index.isdigit():
+            index = int(index)
+        else:
+            raise ValueError('Please input an integer!')
     else:
-        raise ValueError('Please input an integer!')
+        index = 0
     return filenames[index]
 
 
@@ -397,6 +402,11 @@ def prepare_dir():
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--force', action='store_true', help='Force (False)')
+    args = parser.parse_args()
+    force = args.force
+
     prepare_dir()
     ref_file = extract_ref()
     df = gen_frame(ref_file)
