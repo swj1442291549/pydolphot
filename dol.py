@@ -408,7 +408,7 @@ if __name__ == "__main__":
     force = args.force
 
     prepare_dir()
-    ref_file = extract_ref()
+    ref_file = extract_ref(force)
     df = gen_frame(ref_file)
     load_files(df)
     mask_files(df)
