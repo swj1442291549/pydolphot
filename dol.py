@@ -259,6 +259,7 @@ def param_files(df):
     }
 
     uvis_params = {
+        'aprad': '0.5',
         'raper': '4',
         'rchi': '2.0',
         'rsky': '15 35',
