@@ -86,14 +86,6 @@ if __name__ == "__main__":
     objtype = 1
     flag = 99
 
-    wgood = np.where(
-        (t[filters[0] + '_SNR'] >= snr) & (t[filters[1] + '_SNR'] >= snr) &
-        (t[filters[0] + '_SHARP']**2 < sharp) &
-        (t[filters[1] + '_SHARP']**2 < sharp) &
-        (t[filters[0] + '_CROWD'] < crowd) & (
-            t[filters[1] + '_CROWD'] < crowd) & (t['OBJECT_TYPE'] == objtype) &
-        (t[filters[0] + '_FLAG'] <= flag) & (t[filters[1] + '_FLAG'] <= flag))
-
     wgood_list = list()
     for i in range(nfilters):
         wgood = np.where((t[filters[i] + '_SNR'] >= snr) & (
