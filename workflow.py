@@ -12,6 +12,6 @@ if __name__ == "__main__":
     subprocess.call('python $dol/dol.py --force', shell=True)
     subprocess.call('python $dol/phot.py', shell=True)
     subprocess.call('python $dol/comp.py', shell=True)
-    subprocess.call('python $dol/fake.py', shell=True)
+    subprocess.call('python $dol/fake.py -c 20', shell=True)
     subprocess.call('python $dol/photfake.py', shell=True)
 
