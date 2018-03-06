@@ -444,6 +444,26 @@ def print_info(df):
             string += ' {0} '.format(exp)
         print(string)
 
+def write_tex(df):
+    df_img = df[df['type'] == 'image']
+    filters = list(Counter(df_img['filter']).keys())
+    filter = filters[0]
+    df_sel = df_img[df_img['filter'] == filter]
+    marker = '+'
+    exp_tex = list()
+    for exp in sorted(df_sel.exp):
+        exp_tex.append('\\unit[{0}]'.format(int(exp)) + '{s}')
+    string = marker.join(exp_tex)
+    print("   & {0}/{1} & {2} & {3} & {4} & {5}. {6}\\\\".format(df.iloc[0]['inst'], df.iloc[0]['detect'], string, filter, df.iloc[0]['prop'], df.iloc[0]['pr_f'][0], df.iloc[0]['pr_l']))
+    filter = filters[1]
+    df_sel = df_img[df_img['filter'] == filter]
+    marker = '+'
+    exp_tex = list()
+    for exp in sorted(df_sel.exp):
+        exp_tex.append('\\unit[{0}]'.format(int(exp)) + '{s}')
+    string = marker.join(exp_tex)
+    print("   &  & {0} & {1} & & \\\\".format(string, filter))
+
 
 
 if __name__ == "__main__":
@@ -457,7 +477,8 @@ if __name__ == "__main__":
     if info:
         ref_file = glob.glob('*drz.fits')[0]
         df = gen_frame(ref_file)
-        print_info(df)
+        # print_info(df)
+        write_tex(df)
 
     else:
         prepare_dir()
