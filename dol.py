@@ -8,6 +8,7 @@ import pandas as pd
 from multiprocessing import Pool
 from pathlib import Path
 import argparse
+from collections import Counter
 
 
 def extract_ref(force, rawdir='raw/'):
@@ -68,21 +69,33 @@ def gen_frame(ref_file, rawdir='raw/'):
 
     filter_list = list()
     detector_list = list()
+    exp_list = list()
+    prop_list = list()
+    pr_l_list = list()
+    pr_f_list = list()
     for i in range(len(df)):
         if df.iloc[i]['inst'] == 'ACS':
             info = acs_info('{0}/{1}'.format(rawdir, df.iloc[i]['img_name']))
             filter_list.append(info['filter'])
             detector_list.append(info['detector'])
+            exp_list.append(info['exp'])
+            prop_list.append(info['prop'])
+            pr_l_list.append(info['pr_l'])
+            pr_f_list.append(info['pr_f'])
         if df.iloc[i]['inst'] == 'WFC3':
             info = wfc3_info('{0}/{1}'.format(rawdir, df.iloc[i]['img_name']))
             filter_list.append(info['filter'])
             detector_list.append(info['detector'])
-        if df.iloc[i]['inst'] == 'WFPC2':
-            info = wfpc2_info('{0}/{1}'.format(rawdir, df.iloc[i]['img_name']))
-            filter_list.append(info['filter'])
-            detector_list.append(info['detector'])
+            exp_list.append(info['exp'])
+            prop_list.append(info['prop'])
+            pr_l_list.append(info['pr_l'])
+            pr_f_list.append(info['pr_f'])
     df['filter'] = filter_list
     df['detect'] = detector_list
+    df['exp'] = exp_list
+    df['prop'] = prop_list
+    df['pr_l'] = pr_l_list
+    df['pr_f'] = pr_f_list
     return df
 
 
@@ -98,7 +111,15 @@ def wfc3_info(filename):
     hdu_list = fits.open(filename)
     filter = hdu_list[0].header['filter']
     detector = hdu_list[0].header['DETECTOR']
-    return {'filter': filter, 'detector': detector}
+    exp = hdu_list[0].header['EXPTIME']
+    prop = hdu_list[0].header['PROPOSID']
+    if 'PR_INV_L' in hdu_list[0].header:
+        pr_l = hdu_list[0].header['PR_INV_L']
+        pr_f = hdu_list[0].header['PR_INV_F']
+    else:
+        pr_l = ''
+        pr_f = ''
+    return {'filter': filter, 'detector': detector, 'exp': exp, 'prop': prop, 'pr_l': pr_l, 'pr_f': pr_f}
 
 
 def acs_info(filename):
@@ -117,7 +138,16 @@ def acs_info(filename):
         filter = f2
     elif ((f2 == 'CLEAR2L') | (f2 == 'CLEAR2S')):
         filter = f1
-    return {'filter': filter, 'detector': ''}
+    exp = hdu_list[0].header['EXPTIME']
+    detector = hdu_list[0].header['DETECTOR']
+    prop = hdu_list[0].header['PROPOSID']
+    if 'PR_INV_L' in hdu_list[0].header:
+        pr_l = hdu_list[0].header['PR_INV_L']
+        pr_f = hdu_list[0].header['PR_INV_F']
+    else:
+        pr_l = ''
+        pr_f = ''
+    return {'filter': filter, 'detector': detector, 'exp': exp, 'prop': prop, 'pr_l': pr_l, 'pr_f': pr_f}
 
 
 def load_files(df, rawdir='raw/'):
@@ -401,31 +431,54 @@ def prepare_dir():
                 print("Complete directory preperation")
 
 
+def print_info(df):
+    print('ID: {0}'.format(df.iloc[0]['prop']))
+    print('Camera: {0}/{1}'.format(df.iloc[0]['inst'], df.iloc[0]['detect']))
+    print('PI: {0}. {1}'.format(df.iloc[0]['pr_f'][0], df.iloc[0]['pr_l']))
+    df_img = df[df['type'] == 'image']
+    filters = Counter(df_img['filter']).keys()
+    for filter in filters:
+        df_sel = df_img[df_img['filter'] == filter]
+        string = "{0}: ".format(filter)
+        for exp in sorted(df_sel.exp):
+            string += ' {0} '.format(exp)
+        print(string)
+
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
+    parser.add_argument('-i', '--info', action='store_true', help='Print info (False)')
     parser.add_argument('--force', action='store_true', help='Force (False)')
     args = parser.parse_args()
     force = args.force
+    info = args.info
 
-    prepare_dir()
-    ref_file = extract_ref(force)
-    df = gen_frame(ref_file)
-    load_files(df)
-    mask_files(df)
-    split_files(df)
-    calsky_files(df)
-    param_files(df)
-    print('Running ...')
+    if info:
+        ref_file = glob.glob('*drz.fits')[0]
+        df = gen_frame(ref_file)
+        print_info(df)
 
-    def inner_dolphot(chip_num):
-        subprocess.call(
-            [
-                'dolphot', 'output{0}'.format(chip_num),
-                '-pphot{0}.param'.format(chip_num)
-            ],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE)
+    else:
+        prepare_dir()
+        ref_file = extract_ref(force)
+        df = gen_frame(ref_file)
+        load_files(df)
+        mask_files(df)
+        split_files(df)
+        calsky_files(df)
+        param_files(df)
+        print('Running ...')
 
-    pool = Pool(2)
-    pool.map(inner_dolphot, [1, 2])
-    pool.close()
+        def inner_dolphot(chip_num):
+            subprocess.call(
+                [
+                    'dolphot', 'output{0}'.format(chip_num),
+                    '-pphot{0}.param'.format(chip_num)
+                ],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE)
+
+        pool = Pool(2)
+        pool.map(inner_dolphot, [1, 2])
+        pool.close()
