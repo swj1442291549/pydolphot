@@ -445,6 +445,14 @@ def print_info(df):
         print(string)
 
 def write_tex(df):
+    mypath = os.getcwd()
+    cluster = mypath.split('/')[-1]
+    if 'NGC' in cluster:
+        cluster_tex = 'NGC {0}'.format(cluster.split('NGC')[1])
+    else:
+        cluster_tex = cluster
+    if cluster[-1] == 'f':
+        cluster_tex += ' (Ref)'
     df_img = df[df['type'] == 'image']
     filters = list(Counter(df_img['filter']).keys())
     filter = filters[0]
@@ -454,7 +462,7 @@ def write_tex(df):
     for exp in sorted(df_sel.exp):
         exp_tex.append('\\unit[{0}]'.format(int(exp)) + '{s}')
     string = marker.join(exp_tex)
-    print("   & {0}/{1} & {2} & {3} & {4} & {5}. {6}\\\\".format(df.iloc[0]['inst'], df.iloc[0]['detect'], string, filter, df.iloc[0]['prop'], df.iloc[0]['pr_f'][0], df.iloc[0]['pr_l']))
+    print(" {7}  & {0}/{1} & {2} & {3} & {4} & {5}. {6}\\\\".format(df.iloc[0]['inst'], df.iloc[0]['detect'], string, filter, df.iloc[0]['prop'], df.iloc[0]['pr_f'][0], df.iloc[0]['pr_l'], cluster_tex))
     filter = filters[1]
     df_sel = df_img[df_img['filter'] == filter]
     marker = '+'
@@ -477,8 +485,8 @@ if __name__ == "__main__":
     if info:
         ref_file = glob.glob('*drz.fits')[0]
         df = gen_frame(ref_file)
-        # print_info(df)
-        write_tex(df)
+        print_info(df)
+        # write_tex(df)
 
     else:
         prepare_dir()
