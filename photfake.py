@@ -117,7 +117,13 @@ if __name__ == "__main__":
     def inner_extract(output_name):
         df = df_raw
         if os.stat(output_name).st_size != 0:
-            data = np.loadtxt(output_name)
+            try:
+                data = np.loadtxt(output_name)
+            except:
+                subprocess.call('rm {0}'.format(output_name), shell=True)
+                print(output_name)
+            else:
+                return pass
             chip_num = int(output_name.split('.')[0][-1])
             step = int(output_name.split('fake')[-1])
             df_sel = df_dict[chip_num].iloc[num_step * step:num_step * (
