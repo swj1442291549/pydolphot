@@ -123,27 +123,26 @@ if __name__ == "__main__":
                 subprocess.call('rm {0}'.format(output_name), shell=True)
                 print(output_name)
             else:
-                return pass
-            chip_num = int(output_name.split('.')[0][-1])
-            step = int(output_name.split('fake')[-1])
-            df_sel = df_dict[chip_num].iloc[num_step * step:num_step * (
-                step + 1)]
-            final_list = []
-            if len(data.shape) == 1:
-                data = [data]
-            for data_item in data:
-                x_data = data_item[2]
-                y_data = data_item[3]
-                f = np.zeros(14)
-                for i, index in enumerate(index_array):
-                    f[i] = data_item[index]
-                for i, index in enumerate(index_array):
-                    f[i + 7] = data_item[index + 13]
-                data_series = pd.Series(f, index=labels_list)
-                item = df_sel[(x_data - df_sel['X'])**2 +
-                              (y_data - df_sel['Y'])**2 < 0.0002].iloc[0]
-                df = df.append(item.append(data_series), ignore_index=True)
-        return df
+                chip_num = int(output_name.split('.')[0][-1])
+                step = int(output_name.split('fake')[-1])
+                df_sel = df_dict[chip_num].iloc[num_step * step:num_step * (
+                    step + 1)]
+                final_list = []
+                if len(data.shape) == 1:
+                    data = [data]
+                for data_item in data:
+                    x_data = data_item[2]
+                    y_data = data_item[3]
+                    f = np.zeros(14)
+                    for i, index in enumerate(index_array):
+                        f[i] = data_item[index]
+                    for i, index in enumerate(index_array):
+                        f[i + 7] = data_item[index + 13]
+                    data_series = pd.Series(f, index=labels_list)
+                    item = df_sel[(x_data - df_sel['X'])**2 +
+                                  (y_data - df_sel['Y'])**2 < 0.0002].iloc[0]
+                    df = df.append(item.append(data_series), ignore_index=True)
+                return df
 
     pool = Pool(20)
     result = pool.map(inner_extract, output_names)
