@@ -82,19 +82,19 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "-f",
-        '--folder',
+        '--file',
         default='complete',
-        help='Output folder name (complete)')
+        help='Input fake star fits file (complete)')
     parser.add_argument(
-        '-n', '--num', type=int, default=100, help='Number of fake stars (100)')
+        '-r', '--run', type=int, default=100, help='Number of fake stars per run (100)')
     parser.add_argument(
-        '--core', type=int, default=30, help='Number of core (30)')
+        '-c', type=int, default=30, help='Number of cores (30)')
     parser.add_argument('--force', action='store_true', help='Force (False)')
     parser.add_argument('--con', action='store_true', help='Continuum (False)')
     args = parser.parse_args()
-    folder = args.folder
-    num_step = args.num
-    core = args.core
+    folder = args.file
+    num_step = args.run
+    core = args.c
     con = args.con
     force = args.force
     file_name = '{0}.fits'.format(folder)
