@@ -65,14 +65,14 @@ if __name__ == "__main__":
         default='complete',
         help='Output folder name (complete)')
     parser.add_argument(
-        '-n',
-        '--num',
+        '-r',
+        '--run',
         type=int,
         default=100,
-        help='Number of fake stars (default)')
+        help='Number of fake stars per run (default)')
     args = parser.parse_args()
     folder = args.folder
-    num_step = args.num
+    num_step = args.run
     file_name = '{0}.fits'.format(folder)
 
     print('Reading ...')
