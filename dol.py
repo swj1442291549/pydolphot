@@ -13,9 +13,9 @@ from collections import Counter
 
 def extract_ref(force, rawdir='raw/'):
     """Read drz files from rawdir
-    
+
     Args:
-        force (boolean): force execute 
+        force (boolean): force execute
         rawdir (string): raw folder
                          (raw/)
 
@@ -39,7 +39,7 @@ def extract_ref(force, rawdir='raw/'):
 
 def gen_frame(ref_file, rawdir='raw/'):
     """Generating the data frame
-    
+
     Args:
         ref_file (string): drz filename
         rawdir (stinrg): raw folder
@@ -101,7 +101,7 @@ def gen_frame(ref_file, rawdir='raw/'):
 
 def wfc3_info(filename):
     """get info for WFC3 instrument
-    
+
     Args:
         filename (string): file name
 
@@ -119,12 +119,19 @@ def wfc3_info(filename):
     else:
         pr_l = ''
         pr_f = ''
-    return {'filter': filter, 'detector': detector, 'exp': exp, 'prop': prop, 'pr_l': pr_l, 'pr_f': pr_f}
+    return {
+        'filter': filter,
+        'detector': detector,
+        'exp': exp,
+        'prop': prop,
+        'pr_l': pr_l,
+        'pr_f': pr_f
+    }
 
 
 def acs_info(filename):
     """get info for ACS instrument
-    
+
     Args:
         filename (string): file name
 
@@ -147,12 +154,19 @@ def acs_info(filename):
     else:
         pr_l = ''
         pr_f = ''
-    return {'filter': filter, 'detector': detector, 'exp': exp, 'prop': prop, 'pr_l': pr_l, 'pr_f': pr_f}
+    return {
+        'filter': filter,
+        'detector': detector,
+        'exp': exp,
+        'prop': prop,
+        'pr_l': pr_l,
+        'pr_f': pr_f
+    }
 
 
 def load_files(df, rawdir='raw/'):
     """Clean and load the data
-    
+
     Args:
         df (DataFrame): data frame
         rawdir (string): raw folder
@@ -168,10 +182,10 @@ def load_files(df, rawdir='raw/'):
 
 def mask_files(df):
     """Make the files
-    
+
     Args:
         df (DataFrame): data frame
-        
+
     """
     print('Masking ...')
     for i in range(len(df)):
@@ -186,10 +200,10 @@ def mask_files(df):
 
 def split_files(df):
     """split the files
-    
+
     Args:
         df (DataFrame): data frame
-        
+
     """
     print('Splitting ...')
     for i in range(len(df)):
@@ -199,10 +213,10 @@ def split_files(df):
 
 def calsky_files(df):
     """calsky the files
-    
+
     Args:
         df (DataFrame): data frame
-        
+
     """
     print('Calculating sky ...')
     for i in range(len(df)):
@@ -214,7 +228,7 @@ def calsky_files(df):
 
 def wfc3_calsky(item):
     """Calsky parameter for WFC3
-    
+
     Args:
         item (item): item
     """
@@ -252,7 +266,7 @@ def wfc3_calsky(item):
 
 def acs_calsky(item):
     """Calsky parameter for ACS
-    
+
     Args:
         item (item): item
     """
@@ -274,7 +288,7 @@ def acs_calsky(item):
 
 def param_files(df):
     """Generate parameter files
-    
+
     Args:
         df (DataFrame): data frame
     """
@@ -357,8 +371,8 @@ def param_files(df):
         f.write("img0_shift=0 0\n")
         f.write("img0_xform=1 0 0\n")
         for i in range(len(df_img)):
-            f.write("img{0:d}_file = {1}\n".format(
-                i + 1, df_img.iloc[i]['img_name'].replace('.fits', '.chip1')))
+            f.write("img{0:d}_file = {1}\n".format(i + 1, df_img.iloc[i][
+                'img_name'].replace('.fits', '.chip1')))
         for i in range(len(df_img)):
             if df_img.iloc[i]['inst'] == 'WFC3':
                 if df_img.iloc[i]['detect'] == 'UVIS':
@@ -387,8 +401,8 @@ def param_files(df):
         f.write("img0_shift=0 0\n")
         f.write("img0_xform=1 0 0\n")
         for i in range(len(df_img)):
-            f.write("img{0:d}_file={1}\n".format(
-                i + 1, df_img.iloc[i]['img_name'].replace('.fits', '.chip2')))
+            f.write("img{0:d}_file={1}\n".format(i + 1, df_img.iloc[i][
+                'img_name'].replace('.fits', '.chip2')))
         for i in range(len(df_img)):
             if df_img.iloc[i]['inst'] == 'WFC3':
                 if df_img.iloc[i]['detect'] == 'UVIS':
@@ -412,7 +426,7 @@ def param_files(df):
 
 def prepare_dir():
     """Prepare the directory
-    
+
     Check the existence of raw. If not, move STScI into raw.
     """
     rawdir = Path('raw/')
@@ -432,6 +446,12 @@ def prepare_dir():
 
 
 def print_info(df):
+    """Print the basic information of the data
+    
+    Args:
+        df (DataFrame): observation data
+
+    """
     print('ID: {0}'.format(df.iloc[0]['prop']))
     print('Camera: {0}/{1}'.format(df.iloc[0]['inst'], df.iloc[0]['detect']))
     print('PI: {0}. {1}'.format(df.iloc[0]['pr_f'][0], df.iloc[0]['pr_l']))
@@ -444,7 +464,15 @@ def print_info(df):
             string += ' {0} '.format(exp)
         print(string)
 
+
 def write_tex(df):
+    """Print the tex format of info
+    
+    It's just for personal usage
+
+    Args:
+        df (DataFrame): observation data
+    """
     mypath = os.getcwd()
     cluster = mypath.split('/')[-1]
     if 'NGC' in cluster:
@@ -462,7 +490,9 @@ def write_tex(df):
     for exp in sorted(df_sel.exp):
         exp_tex.append('\\unit[{0}]'.format(int(exp)) + '{s}')
     string = marker.join(exp_tex)
-    print(" {7}  & {0}/{1} & {2} & {3} & {4} & {5}. {6}\\\\".format(df.iloc[0]['inst'], df.iloc[0]['detect'], string, filter, df.iloc[0]['prop'], df.iloc[0]['pr_f'][0], df.iloc[0]['pr_l'], cluster_tex))
+    print(" {7}  & {0}/{1} & {2} & {3} & {4} & {5}. {6}\\\\".format(
+        df.iloc[0]['inst'], df.iloc[0]['detect'], string, filter, df.iloc[0][
+            'prop'], df.iloc[0]['pr_f'][0], df.iloc[0]['pr_l'], cluster_tex))
     filter = filters[1]
     df_sel = df_img[df_img['filter'] == filter]
     marker = '+'
@@ -473,10 +503,10 @@ def write_tex(df):
     print("   &  & {0} & {1} & & \\\\".format(string, filter))
 
 
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument('-i', '--info', action='store_true', help='Print info (False)')
+    parser.add_argument(
+        '-i', '--info', action='store_true', help='Print info (False)')
     parser.add_argument('--force', action='store_true', help='Force (False)')
     args = parser.parse_args()
     force = args.force
