@@ -70,9 +70,12 @@ if __name__ == "__main__":
         type=int,
         default=100,
         help='Number of fake stars per run (default)')
+    parser.add_argument(
+        '-c', type=int, default=30, help='Number of cores (30)')
     args = parser.parse_args()
     folder = args.folder
     num_step = args.run
+    core = args.c
     file_name = '{0}.fits'.format(folder)
 
     print('Reading ...')
@@ -141,7 +144,7 @@ if __name__ == "__main__":
                     df = df.append(item.append(data_series), ignore_index=True)
                 return df
 
-    pool = Pool(20)
+    pool = Pool(core)
     result = pool.map(inner_extract, output_names)
     pool.close()
 
