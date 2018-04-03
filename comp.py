@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 from astropy.table import Table
 import argparse
+from random import shuffle
 
 
 def histogram_equal(x, nbin):
@@ -35,21 +36,27 @@ def get_data(file_name):
     return df
 
 
-def generate_complete(df, filter1, filter2, point_num, duplicate):
-    mag_bin = histogram_equal(df['{0}_VEGA'.format(filter1)], point_num)
-    f1_list = list()
-    f2_list = list()
-    for i in range(point_num):
-        df_sel = df[df['{0}_VEGA'.format(filter1)] > mag_bin[i]]
-        df_sel = df_sel[df_sel['{0}_VEGA'.format(filter1)] < mag_bin[i + 1]]
-        f1_list.append(np.mean(df_sel['{0}_VEGA'.format(filter1)]))
-        f2_list.append(np.mean(df_sel['{0}_VEGA'.format(filter2)]))
-    f1_array = np.array(f1_list * duplicate)
-    f2_array = np.array(f2_list * duplicate)
-    df_fake = pd.DataFrame({
-        '{0}_VEGA'.format(filter1): f1_array,
-        '{0}_VEGA'.format(filter2): f2_array
-    })
+def generate_complete(df, filter_list, bin_num, total_num):
+    fake_dict = dict()
+
+    length_list = list()
+    for filter in filter_list:
+        mag_list = list()
+        mag_num, mag_bin = np.histogram(df['{0}_VEGA'.format(filter)], bin_num)
+        for i in range(bin_num):
+            df_sel = df[df['{0}_VEGA'.format(filter)] > mag_bin[i]]
+            df_sel = df_sel[df_sel['{0}_VEGA'.format(filter)] < mag_bin[i + 1]]
+            num = np.random.poisson(mag_num[i] * total_num / np.sum(mag_num))
+            mag_list.append(np.random.random(num) * (mag_bin[i + 1] - mag_bin[i]) + mag_bin[i])
+        mag_list = np.concatenate(mag_list)
+        shuffle(mag_list)
+        fake_dict['{0}_VEGA'.format(filter)] = mag_list
+        length_list.append(len(mag_list))
+
+    length_min = np.min(length_list)
+    for key in fake_dict:
+        fake_dict[key] = fake_dict[key][: length_min]
+    df_fake = pd.DataFrame(fake_dict)
     return df_fake
 
 
@@ -101,42 +108,29 @@ def get_filters(df):
     filter_list = []
     for key in df.keys():
         if '_VEGA' in key:
-            filter_list.append(key)
-    if len(filter_list) == 2:
-        if int(filter_list[1][1:-6]) > int(filter_list[0][1:-6]):
-            filter1 = filter_list[0][:-5]
-            filter2 = filter_list[1][:-5]
-        else:
-            filter1 = filter_list[1][:-5]
-            filter2 = filter_list[0][:-5]
-    else:
-        for i in range(len(filter_list)):
-            print('{0}: {1}'.format(i, filter_list[i]))
-        index_1 = input('First filter: ')
-        index_2 = input('Second filter: ')
-        filter1 = filter_list[int(index_1)][:-5]
-        filter2 = filter_list[int(index_2)][:-5]
-    return filter1, filter2
+            filter_list.append(key[:-5])
+    filter_list.sort()
+    return filter_list
 
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '-d',
-        '--dup',
+        '-t',
+        '--tot',
         type=int,
-        default=3000,
-        help='Number of duplicate (3000)')
+        default=50000,
+        help='Total num of fake stars (50000)')
     parser.add_argument(
-        '-n', '--num', type=int, default=20, help='Number of points (20)')
+        '-b', '--bin', type=int, default=20, help='Number of binss (20)')
     args = parser.parse_args()
-    duplicate = args.dup
-    point_num = args.num
+    total_num = args.tot
+    bin_num = args.bin
     df = get_data('final/o.gst.fits')
-    filter1, filter2 = get_filters(df)
+    filter_list = get_filters(df)
 
-    df_fake = generate_complete(df, filter1, filter2, point_num, duplicate)
+    df_fake = generate_complete(df, filter_list, bin_num, total_num)
     df_fake = add_xy(df_fake, df)
     t = Table.from_pandas(df_fake)
     t.write('complete.fits', overwrite=True)
