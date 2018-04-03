@@ -12,24 +12,24 @@ from multiprocessing import Pool
 from tqdm import tqdm
 
 
-def generate_fakelist(df, chip_num, fake_num, filter1, filter2, folder):
+def generate_fakelist(df, chip_num, fake_num, filter_list, folder):
     """Generate the fakelist
     
     Args:
         df (DataFrame): data
         chip_num (int): chip 1 or 2
         fake_num (int): fake index
-        filter1 (string): filter1
-        filter2 (string): filter2
+        filter_list (list): filter list
         folder (string): output folder
     """
     with open('{0}/fake{1}.list{2:0>4}'.format(folder, chip_num, fake_num),
               'w') as f:
         for i in range(len(df)):
-            f.write('0 1 {0} {1} {2} {3}\n'.format(
-                df.iloc[i]['X'], df.iloc[i]['Y'],
-                df.iloc[i]['{0}_VEGA'.format(filter1)],
-                df.iloc[i]['{0}_VEGA'.format(filter2)]))
+            f.write('0 1 {0} {1}'.format(
+                df.iloc[i]['X'], df.iloc[i]['Y']))
+            for filter in filter_list:
+                f.write(' {0}'.format(df.iloc[i]['{0}_VEGA'.format(filter)]))
+            f.write('\n')
 
 
 def generate_fake_param(chip_num, folder):
@@ -70,15 +70,12 @@ def get_filters(df):
     Returns:
         filter1, filter2 (string): filter1 and filter2 name
     """
-    filters = []
+    filter_list = []
     for key in df.keys():
         if '_VEGA' in key:
-            filters.append(key.replace('_VEGA', ''))
-
-    if int(filters[1][1:-1]) > int(filters[0][1:-1]):
-        filter1 = filters[0]
-        filter2 = filters[1]
-    return filter1, filter2
+            filter_list.append(key[:-5])
+    filter_list.sort()
+    return filter_list
 
 
 if __name__ == "__main__":
@@ -127,7 +124,7 @@ if __name__ == "__main__":
         if is_cal == 'y':
             print('Reading ...')
             df = read_fits(file_name)
-            filter1, filter2 = get_filters(df)
+            filter_list = get_filters(df)
 
             df1 = df[df['chip'] == 1]
             df2 = df[df['chip'] == 2]
@@ -139,12 +136,12 @@ if __name__ == "__main__":
             fake1_num = int(len(df1) / num_step)
             for i in tqdm(range(fake1_num)):
                 df1_sel = df1.iloc[i * num_step:(i + 1) * num_step]
-                generate_fakelist(df1_sel, 1, i, filter1, filter2, folder)
+                generate_fakelist(df1_sel, 1, i, filter_list, folder)
             print('Generating fake 2 ...')
             fake2_num = int(len(df2) / num_step)
             for i in tqdm(range(fake2_num)):
                 df2_sel = df2.iloc[i * num_step:(i + 1) * num_step]
-                generate_fakelist(df2_sel, 2, i, filter1, filter2, folder)
+                generate_fakelist(df2_sel, 2, i, filter_list, folder)
 
             print('Running ...')
             output_names = glob.glob('{0}/fake*'.format(folder))
