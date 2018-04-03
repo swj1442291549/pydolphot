@@ -14,7 +14,7 @@ from astropy.table import Table
 
 
 def read_fits(file_name):
-    """Read fits and sort by X
+    """Read fits and sort by seed 1442291549
     
     Args:
         file_name (string): file name
@@ -23,7 +23,12 @@ def read_fits(file_name):
         df (DataFrame): data frame
     """
     df = Table.read(file_name).to_pandas()
-    df = df.sort_values(by=['X'])
+    random.seed(1442291549)
+    tag = np.arange(0, len(df))
+    random.shuffle(tag)
+    df = df.assign(tag=tag)
+    df = df.sort_values(by=['tag'])
+    del df['tag']
     return df
 
 
