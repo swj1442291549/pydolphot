@@ -56,7 +56,9 @@ python $dol/comp.py [-h] [-n num] [-b bin]
 ```
 
 It would generate a fake star list span all the magnitude range with weighted number. The data set is composed of 5 columns: `chip`, `X`, `Y` and brightness in all the filters. The filter name should end with `_VEGA`. A sample filter name looks like `F475W_VEGA` or `F814W_VEGA`.
+
 `--num` controls the rough total number of fake star
+
 `--bin` controls the number of bins in magnitude
 
 ### Fast star test
@@ -65,9 +67,13 @@ python $dol/fake.py [-f fakefile] [-r run] [-c num] [--force] [--con]
 ```
 The fakefile is set to complete by default
 `--run` control the number of fake stars per run. This is designed to control the influence of brightness variance from the fake star.
+
 `-c` control the number of core used. This code use multiple-core to acceleration the fake star test, which can save a lot of time.
+
 `--force` if enabled, it would clear up the output folder from the last run and begin a new start
+
 `--con` if enabled, it would continue the last run, which may be terminated for any cause.
+
 During the fake star test, a folder named after the fake star file will be created and store all the middle files. Be sure not to delete it before you run `photfake.py` command. Please don't name the fake star file as `final.fits`, which would leave a lot of trash in folder `final`.
 
 `photfake.py` is used to generate the result from fake star tests. The parameters should keep the same as `fake.py`
@@ -75,7 +81,9 @@ During the fake star test, a folder named after the fake star file will be creat
 python $dol/photfake.py [-f outputfolder] [-r run] [-c num]
 ```
 `--folder` is the output folder's name from `fake.py`
+
 `-r` which be the same as the parameter in `fake.py`
+
 `-c` control the number of core used.
 
 The output files will be saved as `f.fake.fits` (the middle part is the same as fake star file name) in folder `final`
