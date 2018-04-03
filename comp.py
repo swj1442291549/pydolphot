@@ -38,7 +38,6 @@ def get_data(file_name):
 
 def generate_complete(df, filter_list, bin_num, total_num):
     fake_dict = dict()
-
     length_list = list()
     for filter in filter_list:
         mag_list = list()
@@ -117,15 +116,15 @@ def get_filters(df):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '-t',
-        '--tot',
+        '-n',
+        '--num',
         type=int,
         default=50000,
-        help='Total num of fake stars (50000)')
+        help='Num of fake stars (50000)')
     parser.add_argument(
-        '-b', '--bin', type=int, default=20, help='Number of binss (20)')
+        '-b', '--bin', type=int, default=20, help='Number of bins (20)')
     args = parser.parse_args()
-    total_num = args.tot
+    total_num = args.num
     bin_num = args.bin
     df = get_data('final/o.gst.fits')
     filter_list = get_filters(df)
