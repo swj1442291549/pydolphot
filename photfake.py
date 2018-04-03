@@ -36,15 +36,12 @@ def get_filters(df):
     Returns:
         filter1, filter2 (string): filter1 and filter2 name
     """
-    filters = []
+    filter_list = []
     for key in df.keys():
         if '_VEGA' in key:
-            filters.append(key.replace('_VEGA', ''))
-
-    if int(filters[1][1:-1]) > int(filters[0][1:-1]):
-        filter1 = filters[0]
-        filter2 = filters[1]
-    return filter1, filter2
+            filter_list.append(key[:-5])
+    filter_list.sort()
+    return filter_list
 
 
 def add_coordinate(df, w):
@@ -84,12 +81,11 @@ if __name__ == "__main__":
     w = wcs.WCS(hdu_list[1].header)
 
     df = read_fits(file_name)
-    filter1, filter2 = get_filters(df)
+    filter_list = get_filters(df)
 
-    f1_index = list(df.columns).index('{0}_VEGA'.format(filter1))
-    f2_index = list(df.columns).index('{0}_VEGA'.format(filter2))
-    df.columns.values[f1_index] = '{0}_VEGA_IN'.format(filter1)
-    df.columns.values[f2_index] = '{0}_VEGA_IN'.format(filter2)
+    for filter in filter_list:
+        filter_index = list(df.columns).index('{0}_VEGA'.format(filter))
+        df.columns.values[filter_index] = '{0}_VEGA_IN'.format(filter)
 
     df = add_coordinate(df, w)
 
@@ -102,14 +98,16 @@ if __name__ == "__main__":
     nimg = len(glob.glob('*flt.fits'))
     index_array = np.array([15, 17, 19, 20, 21, 22, 23]) + 2 * (nimg + 2)
     labels_list = list()
-    for label in filter_labels:
-        labels_list.append('{0}{1}'.format(filter1, label))
-    for label in filter_labels:
-        labels_list.append('{0}{1}'.format(filter2, label))
-    df_raw = pd.DataFrame(columns=labels_list + [
-        'X', 'Y', 'chip', '{0}_VEGA_IN'.format(filter1), '{0}_VEGA_IN'.format(
-            filter2)
-    ])
+    for filter in filter_list:
+        for label in filter_labels:
+            labels_list.append('{0}{1}'.format(filter, label))
+
+
+    columns = list(df.columns)
+    columns.remove('RA')
+    columns.remove('DEC')
+
+    df_raw = pd.DataFrame(columns=labels_list + columns)
 
     final_list = list()
     output_names = glob.glob('{0}/output*'.format(folder))
@@ -133,11 +131,10 @@ if __name__ == "__main__":
                 for data_item in data:
                     x_data = data_item[2]
                     y_data = data_item[3]
-                    f = np.zeros(14)
-                    for i, index in enumerate(index_array):
-                        f[i] = data_item[index]
-                    for i, index in enumerate(index_array):
-                        f[i + 7] = data_item[index + 13]
+                    f = np.zeros(len(labels_list))
+                    for j in range(len(filter_list)):
+                        for i, index in enumerate(index_array):
+                            f[i + 7 * j] = data_item[index + 13 * j]
                     data_series = pd.Series(f, index=labels_list)
                     item = df_sel[(x_data - df_sel['X'])**2 +
                                   (y_data - df_sel['Y'])**2 < 0.0002].iloc[0]
@@ -157,11 +154,9 @@ if __name__ == "__main__":
     crowd = 0.5
     flag = np.zeros(len(df))
 
-    index = (df['{0}_SNR'.format(filter1)] > snr) & (df['{0}_SNR'.format(
-        filter2)] > snr) & (df['{0}_SHARP'.format(filter1)]**2 < sharp) & (
-            df['{0}_SHARP'.format(filter2)]**2 <
-            sharp) & (df['{0}_CROWD'.format(filter1)] <
-                      crowd) & (df['{0}_CROWD'.format(filter2)] < crowd)
+    index = (df['X'] >= 0).all()
+    for filter in filter_list:
+        index = index & (df['{0}_SNR'.format(filter)] > snr) & (df['{0}_SHARP'.format(filter)]**2 < sharp) & (df['{0}_CROWD'.format(filter)] < crowd) 
 
     df = df.assign(flag=index.values)
 
