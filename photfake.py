@@ -11,6 +11,7 @@ import pandas as pd
 from tqdm import tqdm
 from multiprocessing import Pool
 from astropy.table import Table
+import random
 
 
 def read_fits(file_name):
