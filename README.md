@@ -86,7 +86,7 @@ python $dol/photfake.py [-f outputfolder] [-r run] [-c num]
 
 `-c` control the number of core used.
 
-The output files will be saved as `f.fake.fits` (the middle part is the same as fake star file name) in folder `final`
+The output files will be saved as `f.fake.fits` (the middle part is the same as fake star file name) in folder `final`. The column `flag` present whether the fake star is detected or not.
 
 Both `fake.py` and `photfake.py` utilize multiple cores to accelerate the calculation. You may want to change the size of pool depending on the condition of your computer.
 
