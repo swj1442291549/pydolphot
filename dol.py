@@ -181,7 +181,7 @@ def load_files(df, rawdir='raw/'):
 
 
 def mask_files(df):
-    """Make the files
+    """Mask the files
 
     Args:
         df (DataFrame): data frame
@@ -191,11 +191,11 @@ def mask_files(df):
     for i in range(len(df)):
         if df.iloc[i]['inst'] == 'WFC3':
             subprocess.call(
-                "wfc3mask " + df.iloc[i]['img_name'] + " > phot.log",
+                "wfc3mask " + df.iloc[i]['img_name'] + " >> phot.log",
                 shell=True)
         if df.iloc[i]['inst'] == 'ACS':
             subprocess.call(
-                "acsmask " + df.iloc[i]['img_name'] + " > phot.log", shell=True)
+                "acsmask " + df.iloc[i]['img_name'] + " >> phot.log", shell=True)
 
 
 def split_files(df):
@@ -208,7 +208,7 @@ def split_files(df):
     print('Splitting ...')
     for i in range(len(df)):
         subprocess.call(
-            "splitgroups " + df.iloc[i]['img_name'] + " > phot.log", shell=True)
+            "splitgroups " + df.iloc[i]['img_name'] + " >> phot.log", shell=True)
 
 
 def calsky_files(df):
