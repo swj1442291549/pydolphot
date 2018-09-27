@@ -430,13 +430,13 @@ def param_files(df):
 
     df_img = df[df['type'] == 'image']
     df_ref = df[df['type'] == 'reference']
-    len_image = len(df_img)
+    len_img = len(df_img)
 
     chip_num = len(glob.glob('{0}.chip[1-4].fits'.format(df_img.iloc[0]['img_name'].split('.')[0])))
 
     paramfile = 'phot.param'
     with open(paramfile, 'w') as f:
-        f.write("Nimg={0:d}\n".format(len_image * chip_num))
+        f.write("Nimg={0:d}\n".format(len_img * chip_num))
         f.write("img0_file={0}\n".format(df_ref.iloc[0]['img_name'].replace(
             '.fits', '.chip1')))
         f.write("img0_shift=0 0\n")
