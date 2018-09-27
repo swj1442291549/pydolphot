@@ -440,7 +440,7 @@ def param_files(df):
         with open(paramfile, 'w') as f:
             f.write("Nimg={0:d}\n".format(len_image))
             f.write("img0_file={0}\n".format(df_ref.iloc[0]['img_name'].replace(
-                '.fits', '.chip{0:d}'.format(chip_id))))
+                '.fits', '.chip1')))
             f.write("img0_shift=0 0\n")
             f.write("img0_xform=1 0 0\n")
             for i in range(len(df_img)):
