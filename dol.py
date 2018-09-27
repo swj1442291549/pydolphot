@@ -6,7 +6,6 @@ import subprocess
 from astropy.io import fits
 import glob
 import pandas as pd
-from multiprocessing import Pool
 from pathlib import Path
 import argparse
 from collections import Counter
@@ -435,36 +434,38 @@ def param_files(df):
 
     chip_num = len(glob.glob('{0}.chip[1-4].fits'.format(df_img.iloc[0]['img_name'].split('.')[0])))
 
-    for chip_id in range(1, chip_num + 1):
-        paramfile = 'phot{0:d}.param'.format(chip_id)
-        with open(paramfile, 'w') as f:
-            f.write("Nimg={0:d}\n".format(len_image))
-            f.write("img0_file={0}\n".format(df_ref.iloc[0]['img_name'].replace(
-                '.fits', '.chip1')))
-            f.write("img0_shift=0 0\n")
-            f.write("img0_xform=1 0 0\n")
-            for i in range(len(df_img)):
-                f.write("img{0:d}_file = {1}\n".format(i + 1, df_img.iloc[i][
-                    'img_name'].replace('.fits', '.chip{0:d}'.format(chip_id))))
-            for i in range(len(df_img)):
+    paramfile = 'phot.param'
+    with open(paramfile, 'w') as f:
+        f.write("Nimg={0:d}\n".format(len_image * chip_num))
+        f.write("img0_file={0}\n".format(df_ref.iloc[0]['img_name'].replace(
+            '.fits', '.chip1')))
+        f.write("img0_shift=0 0\n")
+        f.write("img0_xform=1 0 0\n")
+        for i in range(len_img):
+            for j in range(chip_num):
+                img_number = i + j + 1
+                f.write("img{0:d}_file = {1}\n".format(img_number, df_img.iloc[i][
+                    'img_name'].replace('.fits', '.chip{0:d}'.format(j + 1))))
                 if df_img.iloc[i]['inst'] == 'WFC3':
                     if df_img.iloc[i]['detect'] == 'UVIS':
                         params = uvis_params
                     else:
                         params = ir_params
-                else:
+                elif df_img.iloc[i]['inst'] == 'ACS':
                     params = acs_params
-                f.write("img{0}_shift={1}\n".format(i + 1, params['shift']))
-                f.write("img{0}_xform={1}\n".format(i + 1, params['xform']))
-                f.write("img{0}_raper={1}\n".format(i + 1, params['raper']))
-                f.write("img{0}_rsky={1}\n".format(i + 1, params['rsky']))
-                f.write("img{0}_rchi={1}\n".format(i + 1, params['rchi']))
-                f.write("img{0}_rpsf={1}\n".format(i + 1, params['rpsf']))
-                f.write("img{0}_apsky={1}\n".format(i + 1, params['apsky']))
-            if df_img.iloc[0]['inst'] == 'WFC3' and df_img.iloc[0]['detect'] != 'UVIS':
-                dolphot_params['SkipSky'] = 1
-            for i in dolphot_params.keys():
-                f.write(i + ' = ' + np.str(dolphot_params[i]) + "\n")
+                elif df_img.iloc[i]['inst'] == 'WFPC2':
+                    params = wfpc2_params
+                f.write("img{0}_shift={1}\n".format(img_number, params['shift']))
+                f.write("img{0}_xform={1}\n".format(img_number, params['xform']))
+                f.write("img{0}_raper={1}\n".format(img_number, params['raper']))
+                f.write("img{0}_rsky={1}\n".format(img_number, params['rsky']))
+                f.write("img{0}_rchi={1}\n".format(img_number, params['rchi']))
+                f.write("img{0}_rpsf={1}\n".format(img_number, params['rpsf']))
+                f.write("img{0}_apsky={1}\n".format(img_number, params['apsky']))
+        if df_img.iloc[0]['inst'] == 'WFC3' and df_img.iloc[0]['detect'] != 'UVIS':
+            dolphot_params['SkipSky'] = 1
+        for i in dolphot_params.keys():
+            f.write(i + ' = ' + np.str(dolphot_params[i]) + "\n")
 
 
 def prepare_dir():
@@ -487,6 +488,14 @@ def prepare_dir():
                 subprocess.call('rm -rf stdatu.stsci.edu', shell=True)
                 print("Complete directory preperation")
 
+def run_dol():
+    subprocess.call(
+        [
+            'dolphot', 'output',
+            '-pphot.param'
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE)
 
 def print_info(df):
     """Print the basic information of the data
@@ -574,16 +583,4 @@ if __name__ == "__main__":
         calsky_files(df)
         param_files(df)
         print('Running ...')
-
-        def inner_dolphot(chip_num):
-            subprocess.call(
-                [
-                    'dolphot', 'output{0}'.format(chip_num),
-                    '-pphot{0}.param'.format(chip_num)
-                ],
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE)
-
-        pool = Pool(2)
-        pool.map(inner_dolphot, [1, 2])
-        pool.close()
+        run_dol()
