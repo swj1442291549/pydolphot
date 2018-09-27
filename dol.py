@@ -443,7 +443,7 @@ def param_files(df):
         f.write("img0_xform=1 0 0\n")
         for i in range(len_img):
             for j in range(chip_num):
-                img_number = i + j + 1
+                img_number = i * 4 + j + 1
                 f.write("img{0:d}_file = {1}\n".format(img_number, df_img.iloc[i][
                     'img_name'].replace('.fits', '.chip{0:d}'.format(j + 1))))
                 if df_img.iloc[i]['inst'] == 'WFC3':
