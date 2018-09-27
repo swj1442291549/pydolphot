@@ -4,6 +4,7 @@ import os
 import sys
 import subprocess
 from astropy.io import fits
+import glob
 import pandas as pd
 from multiprocessing import Pool
 from pathlib import Path
@@ -53,7 +54,7 @@ def gen_frame(ref_file, rawdir='raw/'):
     if not rawfiles:
         raise IOError('No images found')
     filenames = [j.replace(rawdir, "") for j in rawfiles]
-    img_names = [x for x in filenames if 'flt.' in x]
+    img_names = [x for x in filenames if 'flt.' in x or 'c0m.' in x]
     type_list = ['image'] * len(img_names)
     img_names.append(ref_file)
     type_list.append("reference")
@@ -76,20 +77,16 @@ def gen_frame(ref_file, rawdir='raw/'):
     for i in range(len(df)):
         if df.iloc[i]['inst'] == 'ACS':
             info = acs_info('{0}/{1}'.format(rawdir, df.iloc[i]['img_name']))
-            filter_list.append(info['filter'])
-            detector_list.append(info['detector'])
-            exp_list.append(info['exp'])
-            prop_list.append(info['prop'])
-            pr_l_list.append(info['pr_l'])
-            pr_f_list.append(info['pr_f'])
         if df.iloc[i]['inst'] == 'WFC3':
             info = wfc3_info('{0}/{1}'.format(rawdir, df.iloc[i]['img_name']))
-            filter_list.append(info['filter'])
-            detector_list.append(info['detector'])
-            exp_list.append(info['exp'])
-            prop_list.append(info['prop'])
-            pr_l_list.append(info['pr_l'])
-            pr_f_list.append(info['pr_f'])
+        if df.iloc[i]['inst'] == 'WFPC2':
+            info = wfpc2_info('{0}/{1}'.format(rawdir, df.iloc[i]['img_name']))
+        filter_list.append(info['filter'])
+        detector_list.append(info['detector'])
+        exp_list.append(info['exp'])
+        prop_list.append(info['prop'])
+        pr_l_list.append(info['pr_l'])
+        pr_f_list.append(info['pr_f'])
     df['filter'] = filter_list
     df['detect'] = detector_list
     df['exp'] = exp_list
@@ -111,6 +108,35 @@ def wfc3_info(filename):
     hdu_list = fits.open(filename)
     filter = hdu_list[0].header['filter']
     detector = hdu_list[0].header['DETECTOR']
+    exp = hdu_list[0].header['EXPTIME']
+    prop = hdu_list[0].header['PROPOSID']
+    if 'PR_INV_L' in hdu_list[0].header:
+        pr_l = hdu_list[0].header['PR_INV_L']
+        pr_f = hdu_list[0].header['PR_INV_F']
+    else:
+        pr_l = ''
+        pr_f = ''
+    return {
+        'filter': filter,
+        'detector': detector,
+        'exp': exp,
+        'prop': prop,
+        'pr_l': pr_l,
+        'pr_f': pr_f
+    }
+
+def wfpc2_info(filename):
+    """get info for WFPC2 instrument
+
+    Args:
+        filename (string): file name
+
+    Returns:
+        dict (dictionary): filter and detector
+    """
+    hdu_list = fits.open(filename)
+    filter = hdu_list[0].header['FILTNAM1']
+    detector = ''
     exp = hdu_list[0].header['EXPTIME']
     prop = hdu_list[0].header['PROPOSID']
     if 'PR_INV_L' in hdu_list[0].header:
@@ -193,9 +219,12 @@ def mask_files(df):
             subprocess.call(
                 "wfc3mask " + df.iloc[i]['img_name'] + " >> phot.log",
                 shell=True)
-        if df.iloc[i]['inst'] == 'ACS':
+        elif df.iloc[i]['inst'] == 'ACS':
             subprocess.call(
                 "acsmask " + df.iloc[i]['img_name'] + " >> phot.log", shell=True)
+        elif df.iloc[i]['inst'] == 'WFPC2':
+            subprocess.call(
+                "wfpc2mask " + df.iloc[i]['img_name'] + " >> phot.log", shell=True)
 
 
 def split_files(df):
@@ -222,8 +251,10 @@ def calsky_files(df):
     for i in range(len(df)):
         if df.iloc[i]['inst'] == 'WFC3':
             wfc3_calsky(df.iloc[i])
-        if df.iloc[i]['inst'] == 'ACS':
+        elif df.iloc[i]['inst'] == 'ACS':
             acs_calsky(df.iloc[i])
+        elif df.iloc[i]['inst'] == 'WFPC2':
+            wfpc2_calsky(df.iloc[i])
 
 
 def wfc3_calsky(item):
@@ -285,6 +316,34 @@ def acs_calsky(item):
             "  15 35 4 2.25 2.00 >> phot2.log",
             shell=True)
 
+def wfpc2_calsky(item):
+    """Calsky parameter for WFPC2
+
+    Args:
+        item (item): item
+    """
+    if item['type'] == 'reference':
+        subprocess.call(
+            "calcsky " + item['img_name'].replace('.fits', '.chip1') +
+            "  10 25 2 2.25 2.00 >> phot1.log",
+            shell=True)
+    else:
+        subprocess.call(
+            "calcsky " + item['img_name'].replace('.fits', '.chip1') +
+            "  10 25 2 2.25 2.00 >> phot1.log",
+            shell=True)
+        subprocess.call(
+            "calcsky " + item['img_name'].replace('.fits', '.chip2') +
+            "  10 25 2 2.25 2.00 >> phot2.log",
+            shell=True)
+        subprocess.call(
+            "calcsky " + item['img_name'].replace('.fits', '.chip3') +
+            "  10 25 2 2.25 2.00 >> phot3.log",
+            shell=True)
+        subprocess.call(
+            "calcsky " + item['img_name'].replace('.fits', '.chip4') +
+            "  10 25 2 2.25 2.00 >> phot4.log",
+            shell=True)
 
 def param_files(df):
     """Generate parameter files
@@ -322,6 +381,16 @@ def param_files(df):
         'xform': '1 0 0'
     }
 
+    wfpc2_params = {
+        'raper': '4',
+        'rchi': '2.0',
+        'rsky': '15 35',
+        'rpsf': '10',
+        'apsky': '15 25',
+        'shift': '0 0',
+        'xform': '1 0 0'
+    }
+
     dolphot_params = {
         'SkipSky': 2,
         'SkySig': 2.25,
@@ -345,6 +414,7 @@ def param_files(df):
         'Align': 2,
         'Rotate': 1,
         'WFC3useCTE': 1,
+        'WPFC2useCTE': 1,
         'FlagMask': 4,
         'CombineChi': 0,
         'WFC3IRpsfType': 0,
@@ -363,65 +433,38 @@ def param_files(df):
     df_ref = df[df['type'] == 'reference']
     len_image = len(df_img)
 
-    paramfile = 'phot1.param'
-    with open(paramfile, 'w') as f:
-        f.write("Nimg={0:d}\n".format(len_image))
-        f.write("img0_file={0}\n".format(df_ref.iloc[0]['img_name'].replace(
-            '.fits', '.chip1')))
-        f.write("img0_shift=0 0\n")
-        f.write("img0_xform=1 0 0\n")
-        for i in range(len(df_img)):
-            f.write("img{0:d}_file = {1}\n".format(i + 1, df_img.iloc[i][
-                'img_name'].replace('.fits', '.chip1')))
-        for i in range(len(df_img)):
-            if df_img.iloc[i]['inst'] == 'WFC3':
-                if df_img.iloc[i]['detect'] == 'UVIS':
-                    params = uvis_params
-                else:
-                    params = ir_params
-            else:
-                params = acs_params
-            f.write("img{0}_shift={1}\n".format(i + 1, params['shift']))
-            f.write("img{0}_xform={1}\n".format(i + 1, params['xform']))
-            f.write("img{0}_raper={1}\n".format(i + 1, params['raper']))
-            f.write("img{0}_rsky={1}\n".format(i + 1, params['rsky']))
-            f.write("img{0}_rchi={1}\n".format(i + 1, params['rchi']))
-            f.write("img{0}_rpsf={1}\n".format(i + 1, params['rpsf']))
-            f.write("img{0}_apsky={1}\n".format(i + 1, params['apsky']))
-        if df_img.iloc[0]['inst'] == 'WFC3' and df_img.iloc[0]['detect'] != 'UVIS':
-            dolphot_params['SkipSky'] = 1
-        for i in dolphot_params.keys():
-            f.write(i + ' = ' + np.str(dolphot_params[i]) + "\n")
+    chip_num = len(glob.glob('{0}.chip[1-4].fits'.format(df_img.iloc[0]['img_name'].split('.')[0])))
 
-    paramfile = 'phot2.param'
-    with open(paramfile, 'w') as f:
-        f.write("Nimg={0:d}\n".format(len_image))
-        f.write("img0_file={0}\n".format(df_ref.iloc[0]['img_name'].replace(
-            '.fits', '.chip1')))
-        f.write("img0_shift=0 0\n")
-        f.write("img0_xform=1 0 0\n")
-        for i in range(len(df_img)):
-            f.write("img{0:d}_file={1}\n".format(i + 1, df_img.iloc[i][
-                'img_name'].replace('.fits', '.chip2')))
-        for i in range(len(df_img)):
-            if df_img.iloc[i]['inst'] == 'WFC3':
-                if df_img.iloc[i]['detect'] == 'UVIS':
-                    params = uvis_params
+    for chip_id in range(1, chip_num + 1):
+        paramfile = 'phot{0:d}.param'.format(chip_id)
+        with open(paramfile, 'w') as f:
+            f.write("Nimg={0:d}\n".format(len_image))
+            f.write("img0_file={0}\n".format(df_ref.iloc[0]['img_name'].replace(
+                '.fits', '.chip{0:d}'.format(chip_id))))
+            f.write("img0_shift=0 0\n")
+            f.write("img0_xform=1 0 0\n")
+            for i in range(len(df_img)):
+                f.write("img{0:d}_file = {1}\n".format(i + 1, df_img.iloc[i][
+                    'img_name'].replace('.fits', '.chip{0:d}'.format(chip_id))))
+            for i in range(len(df_img)):
+                if df_img.iloc[i]['inst'] == 'WFC3':
+                    if df_img.iloc[i]['detect'] == 'UVIS':
+                        params = uvis_params
+                    else:
+                        params = ir_params
                 else:
-                    params = ir_params
-            else:
-                params = acs_params
-            f.write("img{0}_shift={1}\n".format(i + 1, params['shift']))
-            f.write("img{0}_xform={1}\n".format(i + 1, params['xform']))
-            f.write("img{0}_raper={1}\n".format(i + 1, params['raper']))
-            f.write("img{0}_rsky={1}\n".format(i + 1, params['rsky']))
-            f.write("img{0}_rchi={1}\n".format(i + 1, params['rchi']))
-            f.write("img{0}_rpsf={1}\n".format(i + 1, params['rpsf']))
-            f.write("img{0}_apsky={1}\n".format(i + 1, params['apsky']))
-        if df_img.iloc[0]['inst'] == 'WFC3' and df_img.iloc[0]['detect'] != 'UVIS':
-            dolphot_params['SkipSky'] = 1
-        for i in dolphot_params.keys():
-            f.write(i + '=' + np.str(dolphot_params[i]) + "\n")
+                    params = acs_params
+                f.write("img{0}_shift={1}\n".format(i + 1, params['shift']))
+                f.write("img{0}_xform={1}\n".format(i + 1, params['xform']))
+                f.write("img{0}_raper={1}\n".format(i + 1, params['raper']))
+                f.write("img{0}_rsky={1}\n".format(i + 1, params['rsky']))
+                f.write("img{0}_rchi={1}\n".format(i + 1, params['rchi']))
+                f.write("img{0}_rpsf={1}\n".format(i + 1, params['rpsf']))
+                f.write("img{0}_apsky={1}\n".format(i + 1, params['apsky']))
+            if df_img.iloc[0]['inst'] == 'WFC3' and df_img.iloc[0]['detect'] != 'UVIS':
+                dolphot_params['SkipSky'] = 1
+            for i in dolphot_params.keys():
+                f.write(i + ' = ' + np.str(dolphot_params[i]) + "\n")
 
 
 def prepare_dir():
@@ -454,7 +497,10 @@ def print_info(df):
     """
     print('ID: {0}'.format(df.iloc[0]['prop']))
     print('Camera: {0}/{1}'.format(df.iloc[0]['inst'], df.iloc[0]['detect']))
-    print('PI: {0}. {1}'.format(df.iloc[0]['pr_f'][0], df.iloc[0]['pr_l']))
+    try:
+        print('PI: {0}. {1}'.format(df.iloc[0]['pr_f'][0], df.iloc[0]['pr_l']))
+    except:
+        print('No PI info is found')
     df_img = df[df['type'] == 'image']
     filters = Counter(df_img['filter']).keys()
     for filter in filters:
