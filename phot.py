@@ -13,8 +13,7 @@ import glob
 if __name__ == "__main__":
     refname = glob.glob('*drz.fits')[0]
 
-    data_1_name = 'output1'
-    data_2_name = 'output2'
+    data_name = 'output'
 
     global_labels = ['Number', 'RA', 'DEC', 'X', 'Y', 'OBJECT_TYPE']
     filter_labels = [
@@ -23,7 +22,7 @@ if __name__ == "__main__":
     formats = ['f8', 'f8', 'f8', 'f8', 'f8', 'f8', 'f8']
 
     # read filters from output1.columns
-    df_column = pd.read_table('output1.columns', names=['column'])
+    df_column = pd.read_table('output.columns', names=['column'])
     filters = []
     for i in range(int((len(df_column) - 11) / 13)):
         column = df_column.iloc[11 + 13 * i]['column']
@@ -39,23 +38,15 @@ if __name__ == "__main__":
     hdu_list = fits.open(refname)
     w = wcs.WCS(hdu_list[1].header)
 
-    print('Loading raw DOLPHOT file for chip1...')
-    data_1 = np.loadtxt(data_1_name)
-    print('Loaded {0} objects'.format(len(data_1)))
-    num_1 = np.arange(len(data_1[:, 0])) + 1
-    world_1 = w.wcs_pix2world(data_1[:, 2], data_1[:, 3], 1)
+    print('Loading raw DOLPHOT file...')
+    data = np.loadtxt(data_name)
+    print('Loaded {0} objects'.format(len(data)))
+    num = np.arange(len(data[:, 0])) + 1
+    world = w.wcs_pix2world(data[:, 2], data[:, 3], 1)
 
-    print('Loading raw DOLPHOT file for chip2...')
-    data_2 = np.loadtxt(data_2_name)
-    print('Loaded {0} objects'.format(len(data_2)))
-    num_2 = np.arange(len(data_2[:, 0])) + len(data_1) + 1
-    world_2 = w.wcs_pix2world(data_2[:, 2], data_2[:, 3], 1)
-
-    num = np.append(num_1, num_2)
-    ra = np.append(world_1[0], world_2[0])
-    dec = np.append(world_1[1], world_2[1])
-    data = np.concatenate((data_1, data_2), axis=0)
-    chip = np.append(np.array([1] * len(num_1)), np.array([2] * len(num_2)))
+    ra = world[0]
+    dec = world[1]
+    chip = np.ones(len(num))
 
     t = astropy.table.Table()
     t.add_column(astropy.table.Column(name=global_labels[0],
