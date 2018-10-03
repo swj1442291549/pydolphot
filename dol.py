@@ -8,6 +8,7 @@ import glob
 import pandas as pd
 from pathlib import Path
 import argparse
+import re
 from collections import Counter
 
 
@@ -203,6 +204,12 @@ def load_files(df, rawdir='raw/'):
             "cp {0}/{1} {2}".format(rawdir, df.iloc[i]["img_name"],
                                     os.getcwd()),
             shell=True)
+        if df.iloc[i].inst == 'WFPC2':
+            subprocess.call(
+                "cp {0}/{1} {2}".format(rawdir, re.sub('c0m', 'c1m' ,df.iloc[i]["img_name"]),
+                                        os.getcwd()),
+                shell=True)
+
 
 
 def mask_files(df):
@@ -223,7 +230,7 @@ def mask_files(df):
                 "acsmask " + df.iloc[i]['img_name'] + " >> phot.log", shell=True)
         elif df.iloc[i]['inst'] == 'WFPC2':
             subprocess.call(
-                "wfpc2mask " + df.iloc[i]['img_name'] + " >> phot.log", shell=True)
+                "wfpc2mask " + df.iloc[i]['img_name'] + " " + re.sub('c0m', 'c1m' ,df.iloc[i]["img_name"]) + " >> phot.log", shell=True)
 
 
 def split_files(df):
@@ -413,7 +420,7 @@ def param_files(df):
         'Align': 2,
         'Rotate': 1,
         'WFC3useCTE': 1,
-        'WPFC2useCTE': 1,
+        'WFPC2useCTE': 1,
         'FlagMask': 4,
         'CombineChi': 0,
         'WFC3IRpsfType': 0,
