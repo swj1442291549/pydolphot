@@ -273,31 +273,31 @@ def wfc3_calsky(item):
         if item['detect'] == 'UVIS':
             subprocess.call(
                 "calcsky " + item['img_name'].replace('.fits', '.chip1') +
-                "  15 35 4 2.25 2.00 >> phot1.log",
+                "  15 35 4 2.25 2.00 >> phot.log",
                 shell=True)
         else:
             subprocess.call(
                 "calcsky " + item['img_name'].replace('.fits', '.chip1') +
-                "  10 25 2 2.25 2.00 >> phot1.log",
+                "  10 25 2 2.25 2.00 >> phot.log",
                 shell=True)
     else:
         if item['detect'] == 'UVIS':
             subprocess.call(
                 "calcsky " + item['img_name'].replace('.fits', '.chip1') +
-                "  15 35 4 2.25 2.00 >> phot1.log",
+                "  15 35 4 2.25 2.00 >> phot.log",
                 shell=True)
             subprocess.call(
                 "calcsky " + item['img_name'].replace('.fits', '.chip2') +
-                "  15 35 4 2.25 2.00 >> phot2.log",
+                "  15 35 4 2.25 2.00 >> phot.log",
                 shell=True)
         else:
             subprocess.call(
                 "calcsky " + item['img_name'].replace('.fits', '.chip1') +
-                "  10 25 2 2.25 2.00 >> phot1.log",
+                "  10 25 2 2.25 2.00 >> phot.log",
                 shell=True)
             subprocess.call(
                 "calcsky " + item['img_name'].replace('.fits', '.chip2') +
-                "  10 25 2 2.25 2.00 >> phot2.log",
+                "  10 25 2 2.25 2.00 >> phot.log",
                 shell=True)
 
 
@@ -315,11 +315,11 @@ def acs_calsky(item):
     else:
         subprocess.call(
             "calcsky " + item['img_name'].replace('.fits', '.chip1') +
-            "  15 35 4 2.25 2.00 >> phot1.log",
+            "  15 35 4 2.25 2.00 >> phot.log",
             shell=True)
         subprocess.call(
             "calcsky " + item['img_name'].replace('.fits', '.chip2') +
-            "  15 35 4 2.25 2.00 >> phot2.log",
+            "  15 35 4 2.25 2.00 >> phot.log",
             shell=True)
 
 def wfpc2_calsky(item):
@@ -331,24 +331,24 @@ def wfpc2_calsky(item):
     if item['type'] == 'reference':
         subprocess.call(
             "calcsky " + item['img_name'].replace('.fits', '.chip1') +
-            "  10 25 2 2.25 2.00 >> phot1.log",
+            "  10 25 2 2.25 2.00 >> phot.log",
             shell=True)
     else:
         subprocess.call(
             "calcsky " + item['img_name'].replace('.fits', '.chip1') +
-            "  10 25 2 2.25 2.00 >> phot1.log",
+            "  10 25 2 2.25 2.00 >> phot.log",
             shell=True)
         subprocess.call(
             "calcsky " + item['img_name'].replace('.fits', '.chip2') +
-            "  10 25 2 2.25 2.00 >> phot2.log",
+            "  10 25 2 2.25 2.00 >> phot.log",
             shell=True)
         subprocess.call(
             "calcsky " + item['img_name'].replace('.fits', '.chip3') +
-            "  10 25 2 2.25 2.00 >> phot3.log",
+            "  10 25 2 2.25 2.00 >> phot.log",
             shell=True)
         subprocess.call(
             "calcsky " + item['img_name'].replace('.fits', '.chip4') +
-            "  10 25 2 2.25 2.00 >> phot4.log",
+            "  10 25 2 2.25 2.00 >> phot.log",
             shell=True)
 
 def param_files(df):
