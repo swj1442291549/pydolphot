@@ -98,7 +98,6 @@ if __name__ == "__main__":
 
     df = add_coordinate(df, w)
 
-    df_dict = {1: df[df['chip'] == 1], 2: df[df['chip'] == 2]}
 
     print('Extracting ...')
     filter_labels = [
@@ -116,13 +115,11 @@ if __name__ == "__main__":
     columns.remove('RA')
     columns.remove('DEC')
 
-    df_raw = pd.DataFrame(columns=labels_list + columns)
 
-    final_list = list()
     output_names = glob.glob('{0}/output*'.format(folder))
 
     def inner_extract(output_name):
-        df = df_raw
+        df_raw = pd.DataFrame(columns=labels_list + columns)
         if os.stat(output_name).st_size != 0:
             try:
                 data = np.loadtxt(output_name)
@@ -130,11 +127,9 @@ if __name__ == "__main__":
                 subprocess.call('rm {0}'.format(output_name), shell=True)
                 print(output_name)
             else:
-                chip_num = int(output_name.split('.')[0][-1])
                 step = int(output_name.split('fake')[-1])
-                df_sel = df_dict[chip_num].iloc[num_step * step:num_step * (
+                df_sel = df.iloc[num_step * step:num_step * (
                     step + 1)]
-                final_list = []
                 if len(data.shape) == 1:
                     data = [data]
                 for data_item in data:
@@ -143,12 +138,12 @@ if __name__ == "__main__":
                     f = np.zeros(len(labels_list))
                     for j in range(len(filter_list)):
                         for i, index in enumerate(index_array):
-                            f[i + 7 * j] = data_item[index + 13 * j]
+                            f[i + 7 * j] = data_item[index + 13 * j] # BUG
                     data_series = pd.Series(f, index=labels_list)
                     item = df_sel[(x_data - df_sel['X'])**2 +
                                   (y_data - df_sel['Y'])**2 < 0.0002].iloc[0]
-                    df = df.append(item.append(data_series), ignore_index=True)
-                return df
+                    df_raw = df_raw.append(item.append(data_series), ignore_index=True)
+                return df_raw
 
     pool = Pool(core)
     result = pool.map(inner_extract, output_names)
