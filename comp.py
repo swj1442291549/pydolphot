@@ -89,5 +89,5 @@ if __name__ == "__main__":
 
     df_fake = generate_complete(df, filter_list, total_num)
     df_fake = add_xy(df_fake, df)
-    # t = Table.from_pandas(df_fake)
-    # t.write('complete.fits', overwrite=True)
+    t = Table.from_pandas(df_fake)
+    t.write('complete.fits', overwrite=True)
