@@ -38,9 +38,10 @@ def get_data(file_name):
 
 def generate_complete(df, filter_list, total_num):
     fake_dict = dict()
+    multiple = int(np.ceil(total_num / len(df)))
     for filter_name in filter_list:
-        fake_dict['{0}_VEGA'.format(filter_name)] = df['{0}_VEGA'.format(
-            filter_name)] + np.random.random(len(df)) * 0.5 - 0.25
+        fake_dict['{0}_VEGA'.format(filter_name)] = np.array(multiple * list(df['{0}_VEGA'.format(
+            filter_name)])) + np.random.random(len(df) * multiple) * 0.5 - 0.25
     df_fake = pd.DataFrame(fake_dict)
     return df_fake
 
@@ -88,5 +89,5 @@ if __name__ == "__main__":
 
     df_fake = generate_complete(df, filter_list, total_num)
     df_fake = add_xy(df_fake, df)
-    t = Table.from_pandas(df_fake)
-    t.write('complete.fits', overwrite=True)
+    # t = Table.from_pandas(df_fake)
+    # t.write('complete.fits', overwrite=True)
