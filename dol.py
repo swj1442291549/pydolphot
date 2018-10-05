@@ -310,7 +310,7 @@ def acs_calsky(item):
     if item['type'] == 'reference':
         subprocess.call(
             "calcsky " + item['img_name'].replace('.fits', '.chip1') +
-            "  15 35 4 2.25 2.00 >> phot1.log",
+            "  15 35 4 2.25 2.00 >> phot.log",
             shell=True)
     else:
         subprocess.call(
