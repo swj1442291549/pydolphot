@@ -11,37 +11,40 @@ import pickle
 from multiprocessing import Pool
 from tqdm import tqdm
 import random
+from collections import Counter
 
 
-def generate_fakelist(df, fake_num, filter_list, folder):
+def generate_fakelist(df, chip, fake_num, filter_list, folder):
     """Generate the fakelist
     
     Args:
         df (DataFrame): data
+        chip (int): chip
         fake_num (int): fake index
         filter_list (list): filter list
         folder (string): output folder
     """
-    with open('{0}/fake.list{1:0>4}'.format(folder, fake_num),
+    with open('{0}/fake{1}.list{2:0>4}'.format(folder, chip, fake_num),
               'w') as f:
         for i in range(len(df)):
             f.write('0 1 {0} {1}'.format(
                 df.iloc[i]['X'], df.iloc[i]['Y']))
-            for filter in filter_list:
-                f.write(' {0}'.format(df.iloc[i]['{0}_VEGA'.format(filter)]))
+            for filter_name in filter_list:
+                f.write(' {0}'.format(df.iloc[i]['{0}_VEGA'.format(filter_name)]))
             f.write('\n')
 
 
-def generate_fake_param(folder):
+def generate_fake_param(chip, folder):
     """Generate parameter file for fake star
     
     Args:
+        chip (int): chip number
         folder (string): output folder
     """
     subprocess.call(
-        'cp phot.param phot.{0}.param'.format(folder),
+            'cp phot{0:d}.param phot{0:d}.{1}.param'.format(chip, folder),
         shell=True)
-    with open('phot.{0}.param'.format(folder), 'a') as f:
+    with open('phot{0:d}.{1}.param'.format(chip, folder), 'a') as f:
         f.write("RandomFake=1\n")
         f.write("FakeMatch=3.0\n")
 
@@ -129,28 +132,32 @@ if __name__ == "__main__":
             print('Reading ...')
             df = read_fits(file_name)
             filter_list = get_filters(df)
+            chip_num = len(Counter(df.chip))
 
-            generate_fake_param(folder)
+            for chip in range(1, 1 + chip_num):
+                generate_fake_param(chip, folder)
 
-            print('Generating fake ...')
-            fake_num = int(len(df) / num_step)
-            for i in tqdm(range(fake_num)):
-                df_sel = df.iloc[i * num_step:(i + 1) * num_step]
-                generate_fakelist(df_sel, i, filter_list, folder)
+                print('Generating fake for chip {0:d} ...'.format(chip))
+                df_chip = df[df.chip == chip]
+                fake_num = int(len(df_chip) / num_step)
+                for i in tqdm(range(fake_num)):
+                    df_sel = df_chip.iloc[i * num_step:(i + 1) * num_step]
+                    generate_fakelist(df_sel, chip, i, filter_list, folder)
 
             print('Running ...')
             output_names = glob.glob('{0}/fake*'.format(folder))
 
             def inner_dolphot(output_name):
+                chip = int(output_name.split('list')[0][-2])
                 index = int(output_name.split('list')[1])
                 subprocess.call(
                     [
-                        'dolphot', 'output',
-                        '-pphot.{0}.param'.format(folder),
-                        'FakeStars={0}/fake.list{1:0>4}'.format(
-                            folder,
-                            index), 'FakeOut={0}/output.fake{1:0>4}'.format(
-                                folder, index)
+                        'dolphot', 'output{0}'.format(chip),
+                        '-pphot{0:d}.{1}.param'.format(chip, folder),
+                        'FakeStars={0}/fake{1:d}.list{2:0>4}'.format(
+                            folder, chip,
+                            index), 'FakeOut={0}/output{1:d}.fake{2:0>4}'.format(
+                                folder, chip, index)
                     ],
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE)
@@ -166,21 +173,23 @@ if __name__ == "__main__":
             output_names = list()
             fake_names = glob.glob('{0}/output*'.format(folder))
             for output_name in glob.glob('{0}/fake*'.format(folder)):
+                chip = int(output_name.split('list')[0][-2])
                 index = int(output_name.split('list')[1])
-                fake_name = '{0}/output.fake{1:0>4}'.format(folder, index)
+                fake_name = '{0}/output{1:d}.fake{2:0>4}'.format(folder, chip, index)
                 if fake_name not in fake_names:
                     output_names.append(output_name)
 
             def inner_dolphot(output_name):
+                chip = int(output_name.split('list')[0][-2])
                 index = int(output_name.split('list')[1])
                 subprocess.call(
                     [
-                        'dolphot', 'output',
-                        '-pphot.{0}.param'.format(folder),
-                        'FakeStars={0}/fake.list{1:0>4}'.format(
-                            folder,
-                            index), 'FakeOut={0}/output.fake{1:0>4}'.format(
-                                folder, index)
+                        'dolphot', 'output{0}'.format(chip),
+                        '-pphot{0:d}.{1}.param'.format(chip, folder),
+                        'FakeStars={0}/fake{1:d}.list{2:0>4}'.format(
+                            folder, chip,
+                            index), 'FakeOut={0}/output{1:d}.fake{2:0>4}'.format(
+                                folder, chip, index)
                     ],
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE)
