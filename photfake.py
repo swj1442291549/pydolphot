@@ -89,15 +89,14 @@ if __name__ == "__main__":
     hdu_list = fits.open(refname)
     w = wcs.WCS(hdu_list[1].header)
 
-    df = read_fits(file_name)
-    filter_list = get_filters(df)
+    df_fake = read_fits(file_name)
+    filter_list = get_filters(df_fake)
 
     for filter in filter_list:
-        filter_index = list(df.columns).index('{0}_VEGA'.format(filter))
-        df.columns.values[filter_index] = '{0}_VEGA_IN'.format(filter)
+        filter_index = list(df_fake.columns).index('{0}_VEGA'.format(filter))
+        df_fake.columns.values[filter_index] = '{0}_VEGA_IN'.format(filter)
 
-    df = add_coordinate(df, w)
-
+    df_fake = add_coordinate(df_fake, w)
 
     print('Extracting ...')
     filter_labels = [
@@ -110,11 +109,9 @@ if __name__ == "__main__":
         for label in filter_labels:
             labels_list.append('{0}{1}'.format(filter, label))
 
-
-    columns = list(df.columns)
+    columns = list(df_fake.columns)
     columns.remove('RA')
     columns.remove('DEC')
-
 
     output_names = glob.glob('{0}/output*'.format(folder))
 
@@ -127,8 +124,9 @@ if __name__ == "__main__":
                 subprocess.call('rm {0}'.format(output_name), shell=True)
                 print(output_name)
             else:
+                chip = int(output_name.split('.')[0][-1])
                 step = int(output_name.split('fake')[-1])
-                df_sel = df.iloc[num_step * step:num_step * (
+                df_sel = df_fake[df_fake.chip == chip].iloc[num_step * step:num_step * (
                     step + 1)]
                 if len(data.shape) == 1:
                     data = [data]
