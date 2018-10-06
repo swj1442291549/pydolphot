@@ -98,6 +98,6 @@ if __name__ == "__main__":
         fake_list.append(df_fake)
 
     df_fake = pd.concat(fake_list)
-    df_fake.reset_index(inplace=True)
+    df_fake.reset_index(inplace=True, drop=True)
     t = Table.from_pandas(df_fake)
     t.write('complete.fits', overwrite=True)
