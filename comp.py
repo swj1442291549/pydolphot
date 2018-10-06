@@ -3,6 +3,7 @@ import pandas as pd
 from astropy.table import Table
 import argparse
 from random import shuffle
+from collections import Counter
 
 
 def histogram_equal(x, nbin):
@@ -86,8 +87,16 @@ if __name__ == "__main__":
     total_num = args.num
     df = get_data('final/o.gst.fits')
     filter_list = get_filters(df)
+    chip_num = len(Counter(df['chip']))
 
-    df_fake = generate_complete(df, filter_list, total_num)
-    df_fake = add_xy(df_fake, df)
+    fake_list = list()
+    for chip in range(1, chip_num + 1):
+        df_chip = df[df.chip == chip]
+        df_fake = generate_complete(df_chip, filter_list, total_num / chip_num)
+        df_fake = add_xy(df_fake, df_chip)
+        fake_list.append(df_fake)
+
+    df_fake = pd.concat(fake_list)
+    df_fake.reset_index(inplace=True)
     t = Table.from_pandas(df_fake)
     t.write('complete.fits', overwrite=True)
