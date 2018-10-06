@@ -230,7 +230,7 @@ def mask_files(df):
                 "acsmask " + df.iloc[i]['img_name'] + " >> phot.log", shell=True)
         elif df.iloc[i]['inst'] == 'WFPC2':
             subprocess.call(
-                "wfpc2mask " + df.iloc[i]['img_name'] + " " + re.sub('c0m', 'c1m' ,df.iloc[i]["img_name"]) + " >> phot.log", shell=True)
+                "wfpc2mask " + df.iloc[i]['img_name'] + " " + re.sub('c0m', 'c1m', df.iloc[i]["img_name"]) + " >> phot.log", shell=True)
 
 
 def split_files(df):
@@ -273,31 +273,31 @@ def wfc3_calsky(item):
         if item['detect'] == 'UVIS':
             subprocess.call(
                 "calcsky " + item['img_name'].replace('.fits', '.chip1') +
-                "  15 35 4 2.25 2.00 >> phot.log",
+                "  15 35 4 2.25 2.00 >> phot1.log",
                 shell=True)
         else:
             subprocess.call(
                 "calcsky " + item['img_name'].replace('.fits', '.chip1') +
-                "  10 25 2 2.25 2.00 >> phot.log",
+                "  10 25 2 2.25 2.00 >> phot1.log",
                 shell=True)
     else:
         if item['detect'] == 'UVIS':
             subprocess.call(
                 "calcsky " + item['img_name'].replace('.fits', '.chip1') +
-                "  15 35 4 2.25 2.00 >> phot.log",
+                "  15 35 4 2.25 2.00 >> phot1.log",
                 shell=True)
             subprocess.call(
                 "calcsky " + item['img_name'].replace('.fits', '.chip2') +
-                "  15 35 4 2.25 2.00 >> phot.log",
+                "  15 35 4 2.25 2.00 >> phot2.log",
                 shell=True)
         else:
             subprocess.call(
                 "calcsky " + item['img_name'].replace('.fits', '.chip1') +
-                "  10 25 2 2.25 2.00 >> phot.log",
+                "  10 25 2 2.25 2.00 >> phot1.log",
                 shell=True)
             subprocess.call(
                 "calcsky " + item['img_name'].replace('.fits', '.chip2') +
-                "  10 25 2 2.25 2.00 >> phot.log",
+                "  10 25 2 2.25 2.00 >> phot2.log",
                 shell=True)
 
 
@@ -310,16 +310,16 @@ def acs_calsky(item):
     if item['type'] == 'reference':
         subprocess.call(
             "calcsky " + item['img_name'].replace('.fits', '.chip1') +
-            "  15 35 4 2.25 2.00 >> phot.log",
+            "  15 35 4 2.25 2.00 >> phot1.log",
             shell=True)
     else:
         subprocess.call(
             "calcsky " + item['img_name'].replace('.fits', '.chip1') +
-            "  15 35 4 2.25 2.00 >> phot.log",
+            "  15 35 4 2.25 2.00 >> phot1.log",
             shell=True)
         subprocess.call(
             "calcsky " + item['img_name'].replace('.fits', '.chip2') +
-            "  15 35 4 2.25 2.00 >> phot.log",
+            "  15 35 4 2.25 2.00 >> phot2.log",
             shell=True)
 
 def wfpc2_calsky(item):
@@ -331,31 +331,32 @@ def wfpc2_calsky(item):
     if item['type'] == 'reference':
         subprocess.call(
             "calcsky " + item['img_name'].replace('.fits', '.chip1') +
-            "  10 25 2 2.25 2.00 >> phot.log",
+            "  10 25 2 2.25 2.00 >> phot1.log",
             shell=True)
     else:
         subprocess.call(
             "calcsky " + item['img_name'].replace('.fits', '.chip1') +
-            "  10 25 2 2.25 2.00 >> phot.log",
+            "  10 25 2 2.25 2.00 >> phot1.log",
             shell=True)
         subprocess.call(
             "calcsky " + item['img_name'].replace('.fits', '.chip2') +
-            "  10 25 2 2.25 2.00 >> phot.log",
+            "  10 25 2 2.25 2.00 >> phot2.log",
             shell=True)
         subprocess.call(
             "calcsky " + item['img_name'].replace('.fits', '.chip3') +
-            "  10 25 2 2.25 2.00 >> phot.log",
+            "  10 25 2 2.25 2.00 >> phot3.log",
             shell=True)
         subprocess.call(
             "calcsky " + item['img_name'].replace('.fits', '.chip4') +
-            "  10 25 2 2.25 2.00 >> phot.log",
+            "  10 25 2 2.25 2.00 >> phot4.log",
             shell=True)
 
-def param_files(df):
+def param_files(df, chip_num):
     """Generate parameter files
 
     Args:
         df (DataFrame): data frame
+        chip_num (int): number of chips
     """
     acs_params = {
         'raper': '4',
@@ -439,20 +440,18 @@ def param_files(df):
     df_ref = df[df['type'] == 'reference']
     len_img = len(df_img)
 
-    chip_num = len(glob.glob('{0}.chip[1-4].fits'.format(df_img.iloc[0]['img_name'].split('.')[0])))
-
-    paramfile = 'phot.param'
-    with open(paramfile, 'w') as f:
-        f.write("Nimg={0:d}\n".format(len_img * chip_num))
-        f.write("img0_file={0}\n".format(df_ref.iloc[0]['img_name'].replace(
-            '.fits', '.chip1')))
-        f.write("img0_shift=0 0\n")
-        f.write("img0_xform=1 0 0\n")
-        for i in range(len_img):
-            for j in range(chip_num):
-                img_number = i * chip_num + j + 1
+    for chip in range(1, 1 + chip_num):
+        paramfile = 'phot{0:d}.param'.format(chip)
+        with open(paramfile, 'w') as f:
+            f.write("Nimg={0:d}\n".format(len_img))
+            f.write("img0_file={0}\n".format(df_ref.iloc[0]['img_name'].replace(
+                '.fits', '.chip1')))
+            f.write("img0_shift=0 0\n")
+            f.write("img0_xform=1 0 0\n")
+            for i in range(len_img):
+                img_number = i + 1
                 f.write("img{0:d}_file = {1}\n".format(img_number, df_img.iloc[i][
-                    'img_name'].replace('.fits', '.chip{0:d}'.format(j + 1))))
+                    'img_name'].replace('.fits', '.chip{0:d}'.format(chip))))
                 if df_img.iloc[i]['inst'] == 'WFC3':
                     if df_img.iloc[i]['detect'] == 'UVIS':
                         params = uvis_params
@@ -469,10 +468,16 @@ def param_files(df):
                 f.write("img{0}_rchi={1}\n".format(img_number, params['rchi']))
                 f.write("img{0}_rpsf={1}\n".format(img_number, params['rpsf']))
                 f.write("img{0}_apsky={1}\n".format(img_number, params['apsky']))
-        if df_img.iloc[0]['inst'] == 'WFC3' and df_img.iloc[0]['detect'] != 'UVIS':
-            dolphot_params['SkipSky'] = 1
-        for i in dolphot_params.keys():
-            f.write(i + ' = ' + np.str(dolphot_params[i]) + "\n")
+            if df_img.iloc[0]['inst'] == 'WFC3' and df_img.iloc[0]['detect'] != 'UVIS':
+                dolphot_params['SkipSky'] = 1
+            for i in dolphot_params.keys():
+                f.write(i + ' = ' + np.str(dolphot_params[i]) + "\n")
+
+
+def check_chip_num(df):
+    df_img = df[df['type'] == 'image']
+    chip_num = len(glob.glob('{0}.chip[1-4].fits'.format(df_img.iloc[0]['img_name'].split('.')[0])))
+    return chip_num
 
 
 def prepare_dir():
@@ -495,14 +500,15 @@ def prepare_dir():
                 subprocess.call('rm -rf stdatu.stsci.edu', shell=True)
                 print("Complete directory preperation")
 
-def run_dol():
-    subprocess.call(
-        [
-            'dolphot', 'output',
-            '-pphot.param'
-        ],
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE)
+def run_dol(chip_num):
+    for chip in range(1, chip_num + 1):
+        subprocess.call(
+            [
+                'dolphot', 'output{0:d}'.format(chip),
+                '-pphot{0}.param'.format(chip)
+            ],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE)
 
 def print_info(df):
     """Print the basic information of the data
@@ -584,10 +590,11 @@ if __name__ == "__main__":
         prepare_dir()
         ref_file = extract_ref(force)
         df = gen_frame(ref_file)
-        load_files(df)
-        mask_files(df)
-        split_files(df)
+        # load_files(df)
+        # mask_files(df)
+        # split_files(df)
+        chip_num = check_chip_num(df)
         calsky_files(df)
-        param_files(df)
+        param_files(df, chip_num)
         print('Running ...')
-        run_dol()
+        run_dol(chip_num)
