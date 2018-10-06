@@ -89,10 +89,15 @@ if __name__ == "__main__":
     filter_list = get_filters(df)
     chip_num = len(Counter(df['chip']))
 
+    fake_list = list()
     for chip in range(1, chip_num + 1):
         df_chip = df[df.chip == chip]
         df_fake = generate_complete(df_chip, filter_list, total_num / chip_num)
         df_fake = add_xy(df_fake, df_chip)
-        t = Table.from_pandas(df_fake)
-        t.write('complete{0:d}.fits'.format(chip), overwrite=True)
+        df_fake = df_fake.assign(chip=np.ones(len(df_fake)) * chip)
+        fake_list.append(df_fake)
 
+    df_fake = pd.concat(fake_list)
+    df_fake.reset_index(inplace=True)
+    t = Table.from_pandas(df_fake)
+    t.write('complete.fits', overwrite=True)
