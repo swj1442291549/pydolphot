@@ -1,15 +1,17 @@
-import numpy as np
-import glob
 import os
-import sys
-import subprocess
-from astropy.io import fits
-import glob
-import pandas as pd
-from pathlib import Path
-import argparse
 import re
+import sys
+import glob
+import argparse
+import subprocess
+
+from pathlib import Path
 from collections import Counter
+
+import numpy as np
+import pandas as pd
+
+from astropy.io import fits
 
 
 def extract_ref(force, rawdir='raw/'):
