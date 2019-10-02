@@ -361,47 +361,51 @@ def param_files(df, chip_num):
         chip_num (int): number of chips
     """
     acs_params = {
-        'raper': '4',
+        'raper': '3',
         'rchi': '2.0',
         'rsky': '15 35',
-        'rpsf': '10',
+        'rsky2': '4 10',
+        'rpsf': '13',
         'apsky': '15 25',
         'shift': '0 0',
         'xform': '1 0 0'
     }
 
     uvis_params = {
-        'raper': '4',
+        'raper': '3',
         'rchi': '2.0',
         'rsky': '15 35',
-        'rpsf': '10',
+        'rsky2': '4 10',
+        'rpsf': '13',
         'apsky': '15 25',
         'shift': '0 0',
         'xform': '1 0 0'
     }
 
     ir_params = {
-        'raper': '3',
+        'raper': '2',
         'rchi': '1.5',
         'rsky': '8 20',
-        'rpsf': '10',
-        'apsky': '15 25',
+        'rsky2': '3 10',
+        'rpsf': '15',
+        'apsky': '8 20',
         'shift': '0 0',
         'xform': '1 0 0'
     }
 
     wfpc2_params = {
-        'raper': '4',
+        'raper': '3',
         'rchi': '2.0',
         'rsky': '15 35',
-        'rpsf': '10',
+        'rsky2': '4 10',
+        'rpsf': '13',
         'apsky': '15 25',
         'shift': '0 0',
         'xform': '1 0 0'
     }
 
     dolphot_params = {
-        'SkipSky': 2,
+        'SkipSky': 2, # 1 for WFC3/IR
         'SkySig': 2.25,
         'SecondPass': 5,
         'SigFind': 2.5,
