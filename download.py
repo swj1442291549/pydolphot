@@ -38,7 +38,7 @@ if __name__ == "__main__":
     files = out.decode("utf8").split("\n")
     files.remove("")
 
-    if which("axel"):
+    if which("axel") is None:
         print("axel is not found. Use wget instead.")
         for filename in files:
             print("Downloading {0} / {1} ...".format(files.index(filename), len(files)))
