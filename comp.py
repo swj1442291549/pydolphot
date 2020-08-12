@@ -17,8 +17,7 @@ def histogram_equal(x, nbin):
         rad_bin (array): radius bins
     """
     npt = len(x)
-    rad_bin = np.interp(
-        np.linspace(0, npt, nbin + 1), np.arange(npt), np.sort(x))
+    rad_bin = np.interp(np.linspace(0, npt, nbin + 1), np.arange(npt), np.sort(x))
     rad_bin[0] = int(rad_bin[0])
     rad_bin[-1] = rad_bin[-1] + 0.0001
     return rad_bin
@@ -41,8 +40,11 @@ def generate_complete(df, filter_list, total_num):
     fake_dict = dict()
     multiple = int(np.ceil(total_num / len(df)))
     for filter_name in filter_list:
-        fake_dict['{0}_VEGA'.format(filter_name)] = np.array(multiple * list(df['{0}_VEGA'.format(
-            filter_name)])) + np.random.random(len(df) * multiple) * 0.5 - 0.25
+        fake_dict["{0}_VEGA".format(filter_name)] = (
+            np.array(multiple * list(df["{0}_VEGA".format(filter_name)]))
+            + np.random.random(len(df) * multiple) * 0.5
+            - 0.25
+        )
     df_fake = pd.DataFrame(fake_dict)
     return df_fake
 
@@ -55,10 +57,10 @@ def add_xy(df_fake, df):
         df (DataFrame): data
     """
     num = len(df_fake)
-    X_min = min(df['X'])
-    Y_min = min(df['Y'])
-    X_max = max(df['X'])
-    Y_max = max(df['Y'])
+    X_min = min(df["X"])
+    Y_min = min(df["Y"])
+    X_max = max(df["X"])
+    Y_max = max(df["Y"])
     X_fake = np.random.uniform(X_min, X_max, num)
     Y_fake = np.random.uniform(Y_min, Y_max, num)
     df_fake = df_fake.assign(X=X_fake)
@@ -69,7 +71,7 @@ def add_xy(df_fake, df):
 def get_filters(df):
     filter_list = []
     for key in df.keys():
-        if '_VEGA' in key:
+        if "_VEGA" in key:
             filter_list.append(key[:-5])
     filter_list.sort()
     return filter_list
@@ -78,16 +80,13 @@ def get_filters(df):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '-n',
-        '--num',
-        type=int,
-        default=50000,
-        help='Num of fake stars (50000)')
+        "-n", "--num", type=int, default=50000, help="Num of fake stars (50000)"
+    )
     args = parser.parse_args()
     total_num = args.num
-    df = get_data('final/o.gst.fits')
+    df = get_data("final/o.gst.fits")
     filter_list = get_filters(df)
-    chip_num = len(Counter(df['chip']))
+    chip_num = len(Counter(df["chip"]))
 
     fake_list = list()
     for chip in range(1, chip_num + 1):
@@ -100,4 +99,4 @@ if __name__ == "__main__":
     df_fake = pd.concat(fake_list)
     df_fake.reset_index(inplace=True, drop=True)
     t = Table.from_pandas(df_fake)
-    t.write('complete.fits', overwrite=True)
+    t.write("complete.fits", overwrite=True)
