@@ -14,18 +14,17 @@ If it's the first time you use the code, please remember to set `dol` variable t
 export dol="/data/Github/pydolphot"
 ```
 
-It uses [axel](https://github.com/axel-download-accelerator/axel) to accelerate the download process. Be sure to install it before running the code.
+It uses [`axel`](https://github.com/axel-download-accelerator/axel) to accelerate the download process. Be sure to install it before running the code. If `axel` is not found, it will use `wget`.
 
 ### Download the data (optional)
 
 Get access for the data from [HST archieve](http://archive.stsci.edu/hst/search.php) and ask for an anonymous download using email (This is only format support by this script). You can use your favorite ways to download the data, just put them under folder `raw` once you finish the download.
 
-Use the following command to download the data (change the last 5 figures to your request)
+Use the following command to download the data (change the last 5 digits to your request)
 ```bash
-python download.py index [-h] [-c connection numbers] index
+python $dol/download.py index [-h] [-c connection numbers] index
 ```
 `index` is the anonymous number of your request. 
-**Remember to change the email to yours.**
 
 All the raw data downloaded will appear in the folder `raw` and remain unchanged. Feel free to remove them after the you have reduced the data. 
 
@@ -39,7 +38,7 @@ It will ask you to select one the `drz` fits file as the template. If no drizzle
 If `force` is enable, then it will just pick the first drz it find, which is useful when you want it be automatic.
 `-i`, `--info` would print the basic information of this data, including the PI's name (if available), Proposal ID, filters and exposure time.
 
-This file will do `mask`, `split`, `calsky` and `dolphot` automatically and generate the output files `output1` and `output2` (`output3` and `output4` if you are working on WFPC2 data).
+This file will do `mask`, `split`, `calsky` and `dolphot` automatically and generate the output files `output1`, `output2`, ... 
 
 After the previous command finishes, we need to combine the output files into a single file
 ```bash
@@ -95,6 +94,3 @@ If you are lazy and don't want try this code step by step, you can also use the 
 python $dol/workflow.py index
 ```
 `index` is the anonymous number of your request. 
-
-
-
