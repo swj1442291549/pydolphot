@@ -1,17 +1,20 @@
-import subprocess
 import os
-import pandas as pd
+import glob
+import pickle
+import random
+import argparse
+import subprocess
+
+from collections import Counter
+from multiprocessing import Pool
+
 import numpy as np
+import pandas as pd
+
+from tqdm import tqdm
+
 from astropy.io import fits
 from astropy.table import Table
-import argparse
-import glob
-import random
-import pickle
-from multiprocessing import Pool
-from tqdm import tqdm
-import random
-from collections import Counter
 
 
 def generate_fakelist(df, chip, fake_num, filter_list, folder):

@@ -590,8 +590,6 @@ def print_info(df):
         print(string)
 
 
-
-
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-i", "--info", action="store_true", help="Print info (False)")

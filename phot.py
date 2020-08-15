@@ -1,14 +1,16 @@
-import numpy as np
-import sys
-import astropy.table
-from astropy import units as u
-from astropy.io import fits
-from astropy import wcs
-import pandas as pd
-from collections import Counter
-import subprocess
 import os
+import sys
 import glob
+import subprocess
+
+from collections import Counter
+
+import numpy as np
+import pandas as pd
+import astropy.table
+
+from astropy import units as u, wcs
+from astropy.io import fits
 
 if __name__ == "__main__":
     refname = glob.glob("*drz.fits")[0]
@@ -22,7 +24,7 @@ if __name__ == "__main__":
     chip_num = len(glob.glob("output[0-9]"))
 
     # read filters from output.columns
-    df_column = pd.read_table("output1.columns", names=["column"])
+    df_column = pd.read_csv("output1.columns", names=["column"], sep="\t")
     filters = []
     for i in range(int((len(df_column) - 11) / 13)):
         column = df_column.iloc[11 + 13 * i]["column"]

@@ -1,17 +1,21 @@
-import numpy as np
-import astropy.table
-from astropy.io import fits
-from astropy import wcs
-import argparse
-import subprocess
 import os
 import glob
 import pickle
-import pandas as pd
-from tqdm import tqdm
-from multiprocessing import Pool
-from astropy.table import Table
 import random
+import argparse
+import subprocess
+
+from multiprocessing import Pool
+
+import numpy as np
+import pandas as pd
+import astropy.table
+
+from tqdm import tqdm
+
+from astropy import wcs
+from astropy.io import fits
+from astropy.table import Table
 
 
 def read_fits(file_name):
