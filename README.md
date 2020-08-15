@@ -3,6 +3,8 @@ A python wrapper for [DOLPHOT](http://americano.dolphinsim.com/dolphot/).
 
 `pydolphot` is inspired by [dweisz](https://github.com/dweisz/pydolphot).
 
+## Features
+
 Support WFC3, ACS, and WFPC2.
 
 Support handling more than two filters.
