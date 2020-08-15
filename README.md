@@ -2,8 +2,8 @@
 A python wrapper for [DOLPHOT](http://americano.dolphinsim.com/dolphot/).
 pydolphot inspired by [dweisz](https://github.com/dweisz/pydolphot).
 
-Support WFC3, ACS and WFPC2.
-Support handle more than two filters.
+Support WFC3, ACS, and WFPC2.
+Support handling more than two filters.
 
 ## Instruction
 
@@ -26,19 +26,19 @@ python $dol/download.py index [-h] [-c connection numbers] index
 ```
 `index` is the anonymous number of your request. 
 
-All the raw data downloaded will appear in the folder `raw` and remain unchanged. Feel free to remove them after the you have reduced the data. 
+All the raw data downloaded will appear in the folder `raw` and remain unchanged. Feel free to remove them after you have reduced the data. 
 
 ### Run the dolphot
 `dol.py` combine all the procedures into one file
 ```bash
 python $dol/dol.py [-ih] [--force]
 ```
-It will ask you to select one the `drz` fits file as the template. If no drizzle is required, any one should work.
+It will ask you to select one the `drz` fits file as the template. If no drizzle is required, anyone should work.
 
-If `force` is enable, then it will just pick the first drz it find, which is useful when you want it be automatic.
-`-i`, `--info` would print the basic information of this data, including the PI's name (if available), Proposal ID, filters and exposure time.
+If `force` is enabled, then it will just pick the first drz it finds, which is useful when you want it be automatic.
+`-i`, `--info` would print the basic information of this data, including the PI's name (if available), Proposal ID, filters, and exposure time.
 
-This file will do `mask`, `split`, `calsky` and `dolphot` automatically and generate the output files `output1`, `output2`, ... 
+This file will do `mask`, `split`, `calsky`, and `dolphot` automatically and generate the output files `output1`, `output2`, ... 
 
 After the previous command finishes, we need to combine the output files into a single file
 ```bash
@@ -46,7 +46,7 @@ python $dol/phot.py
 ```
 It will read the filters from `output{chip}.columns` and save the result into `o.summary.fits` in folder `final`.
 
-In the meantime, it will also make a selection on signal-to-noise ratio, sharpness, crowdness and object type. The corresponding result is saved in `o.gst.fits`.
+In the meantime, it will also make a selection on the signal-to-noise ratio, sharpness, crowdedness, and object type. The corresponding result is saved in `o.gst.fits`.
 
 If you want to know more about the selection criteria, please refer to [dolphot](https://github.com/dstndstn/dolphot) for more information. And if you change the criteria here, remember to make the same change in `photfake.py`.
 
@@ -57,7 +57,7 @@ Use the following command to generate a fake star list automatically in the name
 python $dol/comp.py [-h] [-n fake star number]
 ```
 
-It would generate a fake star list span all the magnitude range with weighted number. The data set is composed of 5 columns: `chip`, `X`, `Y` and brightness in all the filters. The filter name should end with `_VEGA`, for example `F475W_VEGA` or `F814W_VEGA`.
+It would generate a fake star list span all the magnitude range with a weighted number. The data set is composed of 5 columns: `chip`, `X`, `Y`, and brightness in all the filters. The filter name should end with `_VEGA`, for example, `F475W_VEGA` or `F814W_VEGA`.
 
 ### Fake star test
 ```bash
@@ -84,13 +84,14 @@ python $dol/photfake.py [-f outputfolder] [-r run] [-c num]
 
 `-c` control the number of core used.
 
-The output files will be saved as `f.complete.fits` (the middle part is the same as fake star file name) in folder `final`. The column `flag` present whether the fake star is detected or not.
+The output files will be saved as `f.complete.fits` (the middle part is the same as the fake star file name) in folder `final`. The column `flag` present whether the fake star is detected or not.
 
-Both `fake.py` and `photfake.py` utilize multiple cores to accelerate the calculation. You may want to change the size of pool depending on the condition of your computer.
+Both `fake.py` and `photfake.py` utilize multiple cores to accelerate the calculation. You may want to change the size of the pool depending on the condition of your computer.
 
 ## Cheatsheet
-If you are lazy and don't want try this code step by step, you can also use the workflow I have built
+If you are lazy and don't want to try this code step by step, you can also use the workflow I have built
 ```bash
 python $dol/workflow.py index
 ```
 `index` is the anonymous number of your request. 
+
