@@ -36,6 +36,13 @@ if __name__ == "__main__":
             filters.append(column_filter)
     nfilters = len(filters)
 
+    filters_index = list()
+    for filter_name in filters:
+        for i in range(len(df_column)):
+            if filter_name in df_column.iloc[i].column:
+                filters_index.append(i)
+                break
+
     t_list = list()
     for chip in range(1, 1 + chip_num):
         data_name = "output{0:d}".format(chip)
@@ -65,7 +72,7 @@ if __name__ == "__main__":
             for j, k in enumerate(filter_labels):
                 t.add_column(
                     astropy.table.Column(
-                        name=filters[i] + k, data=data[:, cols[j] + (i * 13)]
+                        name=filters[i] + k, data=data[:, cols[j] + filters_index[i] - 11]
                     )
                 )
         t_list.append(t)
