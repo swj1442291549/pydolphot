@@ -109,6 +109,14 @@ if __name__ == "__main__":
         for label in filter_labels:
             labels_list.append("{0}{1}".format(filter, label))
 
+    df_column = pd.read_csv("output1.columns", names=["column"], sep="\t")
+    filters_index = list()
+    for filter_name in filter_list:
+        for i in range(len(df_column)):
+            if filter_name in df_column.iloc[i].column:
+                filters_index.append(i)
+                break
+
     columns = list(df_fake.columns)
     columns.remove("RA")
     columns.remove("DEC")
@@ -137,7 +145,7 @@ if __name__ == "__main__":
                     f = np.zeros(len(labels_list))
                     for j in range(len(filter_list)):
                         for i, index in enumerate(index_array):
-                            f[i + 7 * j] = data_item[index + 13 * j]  # BUG
+                            f[i + 7 * j] = data_item[index + filters_index[j] - 11]  # BUG
                     data_series = pd.Series(f, index=labels_list)
                     item = df_sel[
                         (x_data - df_sel["X"]) ** 2 + (y_data - df_sel["Y"]) ** 2
