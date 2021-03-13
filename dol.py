@@ -7,11 +7,14 @@ import subprocess
 
 from pathlib import Path
 from collections import Counter
+from tqdm import tqdm
 
 import numpy as np
 import pandas as pd
 
 from astropy.io import fits
+
+from multiprocessing import Pool
 
 
 def extract_ref(force, rawdir="raw/"):
@@ -558,13 +561,21 @@ def prepare_dir():
                 print("Complete directory preperation")
 
 
+def inner_dol(chip):
+    subprocess.call(
+        ["dolphot", "output{0:d}".format(chip), "-pphot{0}.param".format(chip)],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+    )
+
 def run_dol(chip_num):
-    for chip in range(1, chip_num + 1):
-        subprocess.call(
-            ["dolphot", "output{0:d}".format(chip), "-pphot{0}.param".format(chip)],
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-        )
+    print("Running dolphot ...")
+    with Pool(chip_num) as p:
+        with tqdm(total=chip_num) as pbar:
+            for i in tqdm(enumerate(p.imap_unordered(inner_dol, range(1, chip_num + 1)))):
+                pbar.update()
+
+
 
 
 def print_info(df):
@@ -613,5 +624,4 @@ if __name__ == "__main__":
         chip_num = check_chip_num(df)
         calsky_files(df)
         param_files(df, chip_num)
-        print("Running ...")
         run_dol(chip_num)
