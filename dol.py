@@ -261,6 +261,14 @@ def split_files(df):
         )
 
 
+def inner_calsky(item):
+    if item["inst"] == "WFC3":
+        wfc3_calsky(item)
+    elif item["inst"] == "ACS":
+        acs_calsky(item)
+    elif item["inst"] == "WFPC2":
+        wfpc2_calsky(item)
+
 def calsky_files(df):
     """calsky the files
 
@@ -269,13 +277,11 @@ def calsky_files(df):
 
     """
     print("Calculating sky ...")
-    for i in range(len(df)):
-        if df.iloc[i]["inst"] == "WFC3":
-            wfc3_calsky(df.iloc[i])
-        elif df.iloc[i]["inst"] == "ACS":
-            acs_calsky(df.iloc[i])
-        elif df.iloc[i]["inst"] == "WFPC2":
-            wfpc2_calsky(df.iloc[i])
+    print("Running dolphot ...")
+    with Pool(len(df)) as p:
+        with tqdm(total=len(df)) as pbar:
+            for i in tqdm(enumerate(p.imap_unordered(inner_calsky, [df.iloc[i] for i in range(len(df))]))):
+                pbar.update()
 
 
 def wfc3_calsky(item):
