@@ -145,7 +145,9 @@ if __name__ == "__main__":
                     f = np.zeros(len(labels_list))
                     for j in range(len(filter_list)):
                         for i, index in enumerate(index_array):
-                            f[i + 7 * j] = data_item[index + filters_index[j] - 11]  # BUG
+                            f[i + 7 * j] = data_item[
+                                index + filters_index[j] - 11
+                            ]  # BUG
                     data_series = pd.Series(f, index=labels_list)
                     item = df_sel[
                         (x_data - df_sel["X"]) ** 2 + (y_data - df_sel["Y"]) ** 2

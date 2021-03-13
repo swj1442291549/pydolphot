@@ -269,6 +269,7 @@ def inner_calsky(item):
     elif item["inst"] == "WFPC2":
         wfpc2_calsky(item)
 
+
 def calsky_files(df):
     """calsky the files
 
@@ -280,7 +281,11 @@ def calsky_files(df):
     print("Running dolphot ...")
     with Pool(len(df)) as p:
         with tqdm(total=len(df)) as pbar:
-            for i in tqdm(enumerate(p.imap_unordered(inner_calsky, [df.iloc[i] for i in range(len(df))]))):
+            for i in tqdm(
+                enumerate(
+                    p.imap_unordered(inner_calsky, [df.iloc[i] for i in range(len(df))])
+                )
+            ):
                 pbar.update()
 
 
@@ -574,14 +579,15 @@ def inner_dol(chip):
         stderr=subprocess.PIPE,
     )
 
+
 def run_dol(chip_num):
     print("Running dolphot ...")
     with Pool(chip_num) as p:
         with tqdm(total=chip_num) as pbar:
-            for i in tqdm(enumerate(p.imap_unordered(inner_dol, range(1, chip_num + 1)))):
+            for i in tqdm(
+                enumerate(p.imap_unordered(inner_dol, range(1, chip_num + 1)))
+            ):
                 pbar.update()
-
-
 
 
 def print_info(df):

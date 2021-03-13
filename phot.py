@@ -72,7 +72,8 @@ if __name__ == "__main__":
             for j, k in enumerate(filter_labels):
                 t.add_column(
                     astropy.table.Column(
-                        name=filters[i] + k, data=data[:, cols[j] + filters_index[i] - 11]
+                        name=filters[i] + k,
+                        data=data[:, cols[j] + filters_index[i] - 11],
                     )
                 )
         t_list.append(t)
