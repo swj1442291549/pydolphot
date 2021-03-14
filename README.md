@@ -5,7 +5,7 @@ A python wrapper for [DOLPHOT](http://americano.dolphinsim.com/dolphot/).
 
 ## Features
 
-Support WFC3, ACS, and WFPC2. (WFPC2 is not available yet)
+Support WFC3, ACS, and WFPC2.
 
 Support handling more than two filters.
 
