@@ -278,7 +278,6 @@ def calsky_files(df):
 
     """
     print("Calculating sky ...")
-    print("Running dolphot ...")
     with Pool(len(df)) as p:
         with tqdm(total=len(df)) as pbar:
             for i in tqdm(
