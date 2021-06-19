@@ -541,7 +541,7 @@ def param_files(df, chip_num):
             if df_img.iloc[0]["inst"] == "WFC3" and df_img.iloc[0]["detect"] != "UVIS":
                 dolphot_params["SkipSky"] = 1
             for i in dolphot_params.keys():
-                f.write(i + " = " + np.str(dolphot_params[i]) + "\n")
+                f.write(i + " = " + str(dolphot_params[i]) + "\n")
 
 
 def check_chip_num(df):
