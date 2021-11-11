@@ -26,7 +26,7 @@ Get access for the data from [HST archieve](http://archive.stsci.edu/hst/search.
 
 Use the following command to download the data (change the last 5 digits to your request)
 ```bash
-python $dol/download.py index [-h] [-c connection numbers] index
+python $dol/download.py index [-h] [--user user] [--passwd passwd] index
 ```
 `index` is the anonymous number of your request. 
 
